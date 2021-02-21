@@ -22,16 +22,12 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   
   % Target properties
   properties (Access = public)
-    
     scale = 'dB';      % Specify dB or linear units
-    center_freq;       % Center frequency
     loss_system;       % System loss (dB)
     noise_fig;         % Noise figure (dB)
     temperature_noise; % Input noise temperature
-    tx_power;          % Tx power
-    wavelength;        % Carrier wavelength
-    
   end % Public properties
+  
   % Dependent properties
   properties (Dependent)
     
@@ -39,12 +35,6 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   
   %% Setter Methods
   methods
-    
-    function set.center_freq(obj,val)
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.center_freq = val;
-      obj.checkIfUpdated('center_freq',val);
-    end
     
     function set.loss_system(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
@@ -68,16 +58,7 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
       obj.temperature_noise = val;
     end
     
-    function set.tx_power(obj,val)
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.tx_power = val;
-    end
     
-    function set.wavelength(obj,val)
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.wavelength = val;
-      obj.checkIfUpdated('wavelength',val);
-    end
     
   end
   
@@ -99,11 +80,7 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
         return
       end
       
-      switch (param_name)
-        case 'center_freq'
-          obj.wavelength = obj.const.c/obj.center_freq;
-        case 'wavelength'
-          obj.center_freq = obj.const.c/obj.wavelength;
+      switch param_name
       end
       
       % Original parameters have updated all its dependent parameters. We
@@ -116,6 +93,9 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     
     function checkIfUpdated(obj, param_name, param_val)
       if ~any(strcmp(param_name, obj.updated_list))
+        if isempty(obj.updated_list)
+          obj.initial_param = param_name;
+        end
         obj.updated_list{end+1} = param_name;
         obj.updateParams(param_name, param_val);
       end

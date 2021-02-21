@@ -20,7 +20,6 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     antenna = Antenna();
     prf;               % Pulse repetition frequency
     pri;               % Pulse repetition interval
-    
   end
   
   % Dependent properties: These cannot be set correctly, and are
@@ -85,7 +84,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       for ii = 1:length(doppler)
         % Calculate the shift that would be measured with no ambiguities
         true_doppler = dot(targets(ii).velocity,obj.antenna.position)*...
-          2/obj.wavelength;
+          2/obj.antenna.wavelength;
         % Shift can be measured unambiguously, send it straight to the
         % output
         if (abs(true_doppler) < obj.prf/2)
@@ -141,6 +140,9 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     % updateParams call. If it hasn't, add it to the list and update it
     function checkIfUpdated(obj, param_name, param_val)
       if ~any(strcmp(param_name, obj.updated_list))
+        if isempty(obj.updated_list)
+          obj.initial_param = param_name;
+        end
         obj.updated_list{end+1} = param_name;
         obj.updateParams(param_name, param_val);
       end

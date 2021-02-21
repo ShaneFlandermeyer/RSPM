@@ -5,10 +5,15 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   %% Properties
   
+  % Constants
+  properties (Constant = true, Access = private)
+    const = struct('c',299792458,'k',1.38064852e-23,'T0_k',290)
+  end
+  
   % Private properties
   properties (Access = private)
     initial_param; % First parameter updated in updateParams()
-    updated_list = {}; % List of parameters updated due to initial_param
+% %     updated_list = {}; % List of parameters updated due to initial_param
     % A list of antenna parameters that are angles, used when switching
     % between radian mode and degree mode
     angle_params = {'azimuth','elevation'};
@@ -22,16 +27,21 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     azimuth = 0; % Azimuth angle of the antenna aperture w.r.t the x axis
     elevation = 0; % Elevation angle of the antenna aperture
     position = [1;0;0]; % Cartesian (XYZ) antenna beam unit vector
+    center_freq;       % Center frequency
+    tx_power;          % Tx power
+    wavelength;        % Carrier wavelength
   end % Public properties
   
   % Dependent properties that are set based on the antenna properties
   properties (Dependent)
     area;
+    beamwidth_azimuth_3db;
+    beamwidth_elevation_3db;
+    
   end % Dependent Properties
   
   %% Setter methods
   methods
-    
     function set.width(obj,val)
       validateattributes(val,{'numeric'},{'positive'});
       obj.width = val;
@@ -41,7 +51,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       validateattributes(val,{'numeric'},{'positive'});
       obj.height = val;
     end
-      
+    
     function set.azimuth(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan'});
       obj.azimuth = val;
@@ -75,14 +85,49 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
         obj.convertToRadian();
       end
     end
-      
+    
+    function set.tx_power(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.tx_power = val;
+    end
+    
+    function set.wavelength(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.wavelength = val;
+      obj.checkIfUpdated('wavelength',val);
+    end
+    
+    
+    function set.center_freq(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.center_freq = val;
+      obj.checkIfUpdated('center_freq',val);
+    end
   end
   %% Getter methods
   methods
     
     % Calculate the true area of the aperture
-    function val = get.area(obj)
-      val = obj.width*obj.height;
+    function A = get.area(obj)
+      A = obj.width*obj.height;
+    end
+    
+    % Calculate the 3dB beamwidth for our power pattern in azimuth
+    % NOTE: For now, assuming a since pattern
+    function beamwidth = get.beamwidth_azimuth_3db(obj)
+      beamwidth = 0.89*obj.wavelength/obj.width;
+      if (strncmpi(obj.angle_mode,'Degree',1))
+        beamwidth = (180/pi)*beamwidth;
+      end
+    end
+    
+    % Calculate the 3dB beamwidth for our power pattern in elevation
+    % NOTE: For now, assuming a since pattern
+    function beamwidth = get.beamwidth_elevation_3db(obj)
+      beamwidth = 0.89*obj.wavelength/obj.height;
+      if (strncmpi(obj.angle_mode,'Degree',1))
+        beamwidth = (180/pi)*beamwidth;
+      end
     end
     
   end
@@ -124,7 +169,10 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
         case 'position'
           [obj.azimuth,obj.elevation] = ...
             cart2sph(obj.position(1),obj.position(2),obj.position(3));
-          
+        case 'center_freq'
+          obj.wavelength = obj.const.c/obj.center_freq;
+        case 'wavelength'
+          obj.center_freq = obj.const.c/obj.wavelength;
       end
       
       % Original parameters have updated all its dependent parameters. We
@@ -139,6 +187,9 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     % updateParams call. If it hasn't, add it to the list and update it
     function checkIfUpdated(obj, param_name, param_val)
       if ~any(strcmp(param_name, obj.updated_list))
+        if isempty(obj.updated_list)
+          obj.initial_param = param_name;
+        end
         obj.updated_list{end+1} = param_name;
         obj.updateParams(param_name, param_val);
       end
