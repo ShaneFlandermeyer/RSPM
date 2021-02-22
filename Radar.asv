@@ -106,30 +106,30 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     end
     
     % Calculates the received power for the list of targets from the RRE
-    % NOTE: For now, assuming monostatic configuration (G_t = G_r)
+    % TODO: Implement me!!!
     function power = getReceivedPower(obj,targets)
-      % Convert to linear before doing the calculation
-      if strncmpi(obj.scale,'db',1) 
-        G = 10^(obj.antenna.power_gain/10);
-        L_s = 10^(obj.loss_system/10);
-      else
-        G = obj.antenna.power_gain;
-        L_s = obj.loss_system;
-      end
-      ranges = obj.getMeasuredRange(targets);
-      % Calculate the power from the RRE for each targets
-      power = zeros(numel(targets),1);
-      for ii = 1:numel(targets)
-        power(ii) = (obj.antenna.tx_power*G^2*obj.antenna.wavelength^2*...
-          targets(ii).rcs)/((4*pi)^3*L_s*ranges(ii)^4);
-      end
+      if strncmpi(obj.
+%       % Convert antenna gain to linear scale if necessary
+%       if strncmpi(obj.antenna.scale,'db',1)
+%         G = 10^(obj.antenna.power_gain/10);
+%       end
+%       % Do the same for the system loss
+%       if strncmpi(obj.scale,'db',1)
+%         L_s = 10^(obj.loss_system/10);
+%       end
+%       % Calculate the power from the RRE for each targets
+%       power = zeros(numel(targets),1);
+%       for ii = 1:numel(targets)
+%         power(ii) = (obj.antenna.tx_power*G^2*obj.antenna.wavelength^2*...
+%           targets(ii).rcs)/((4*pi)^3*L_s*targets(ii).range^4);
+%       end
     end
     
   end
   
   %% Private Methods
   methods (Access = private)
-    
+
     
     % A helper functions to update dependent parameters that can't be
     % marked explicitly dependent. For example, the prf should be able to

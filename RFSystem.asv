@@ -52,10 +52,10 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
         obj.convertTodB();
       end
       obj.scale = val;
-      % Change sub-objects to linear units if any exist
+      % If any exis
       props = properties(obj);
       for ii = 1:length(props)
-        if isobject(obj.(props{ii})) && isprop(obj.(props{ii}),'scale')
+        if isprop(obj.(props{ii}),'scale')
           obj.(props{ii}).scale = val;
         end
       end
@@ -65,6 +65,8 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.temperature_noise = val;
     end
+    
+    
     
   end
   %% Getter methods

@@ -1,7 +1,6 @@
 % A class representing an antenna. 
 %
-% TODO: Object currently assumes a rectangular, linear, single element
-% aperture. 
+% NOTE: Assumes a square, linear, single 
 
 classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
@@ -20,8 +19,8 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     % between radian mode and degree mode
     angle_params = {'azimuth','elevation','beamwidth_azimuth_3db',...
       'beamwidth_elevation_3db'};
-    power_quantities = {};
-    voltage_quantities = {};
+    power_quantities = {'power_gain'};
+    voltage_quantitites = {};
   end
   
   % Antenna Properties
@@ -123,7 +122,6 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       obj.checkIfUpdated('center_freq',val);
     end
   end
-  
   %% Getter methods
   methods
     
@@ -248,7 +246,6 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     end
     
   end
-  
   %% Hidden Methods (DO NOT EDIT THESE)
   methods (Hidden)
     % Sort the object properties alphabetically
