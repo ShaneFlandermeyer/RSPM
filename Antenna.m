@@ -18,8 +18,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     updated_list = {}; % List of parameters updated due to initial_param
     % A list of antenna parameters that are angles, used when switching
     % between radian mode and degree mode
-    angle_params = {'azimuth','elevation','beamwidth_azimuth_3db',...
-      'beamwidth_elevation_3db'};
+    angle_params = {'azimuth','elevation'};
     power_quantities = {};
     voltage_quantities = {};
   end
@@ -27,13 +26,13 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   % Antenna Properties
   properties (Access = public)
     angle_mode = 'Radian';
-    % TODO: Add a dB mode for antenna parameters
     scale = 'dB';
     width = 0; % Width of the antenna aperture
     height = 0; % Height of the antenna aperture
     azimuth = 0; % Azimuth angle of the antenna aperture w.r.t the x axis
     elevation = 0; % Elevation angle of the antenna aperture
-    position = [1;0;0]; % Cartesian (XYZ) antenna beam unit vector
+    mainbeam_direction = [1;0;0]; % Cartesian (XYZ) antenna beam unit vector
+    position = [0;0;0]; % Cartesian (XYZ) antenna position
     center_freq;       % Center frequency
     tx_power;          % Tx power
     wavelength;        % Carrier wavelength
@@ -45,7 +44,6 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     beamwidth_azimuth_3db;
     beamwidth_elevation_3db;
     power_gain;
-    
   end % Dependent Properties
   
   %% Setter methods
@@ -82,15 +80,15 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       obj.elevation = val;
     end
     
-    function set.position(obj,val)
+    function set.mainbeam_direction(obj,val)
       validateattributes(val,{'numeric'},...
         {'vector','3d','finite','nonnan'});
       if isrow(val) % Make this a column vector
         val = val.';
       end
       val = val ./ norm(val); % Normalize to unit vector
-      obj.position = val; % Set object property
-      obj.checkIfUpdated('position',val); % Update dependent properties
+      obj.mainbeam_direction = val; % Set object property
+      obj.checkIfUpdated('mainbeam_direction',val); % Update dependent properties
     end
     
     function set.angle_mode(obj,val)
@@ -133,7 +131,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     end
     
     % Calculate the 3dB beamwidth for our power pattern in azimuth
-    % NOTE: For now, assuming a since pattern
+    % ASSUMPTION: Sinc pattern
     function beamwidth = get.beamwidth_azimuth_3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.width;
       if (strncmpi(obj.angle_mode,'Degree',1))
@@ -142,7 +140,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     end
     
     % Calculate the 3dB beamwidth for our power pattern in elevation
-    % NOTE: For now, assuming a since pattern
+    % ASSUMPTION: Sinc pattern
     function beamwidth = get.beamwidth_elevation_3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.height;
       if (strncmpi(obj.angle_mode,'Degree',1))
@@ -150,6 +148,8 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       end
     end
     
+    % Get the maximum power gain for the aperture from the 3db beamwidths
+    % ASSUMPTION: Rectangular aperture
     function G = get.power_gain(obj)
       if strncmpi(obj.angle_mode,'Degree',1)
         G = 26e3/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
@@ -163,6 +163,27 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     end
     
   end
+  %% Public Methods
+  methods (Access = public)
+    
+    % Calculate the normalized antenna pattern gain for a given
+    % azimuth/elevation
+    % ASSUMPTION: Rectangular Aperture
+    function gain = getNormPatternGain(obj,az,el)
+      if strncmpi(obj.angle_mode,'Radian',1)
+        % Get the separable azimuth component
+        P_az = sinc(obj.width/obj.wavelength*sin(az));
+        % Get the separable elevation component
+        P_el = sinc(obj.height/obj.wavelength*sin(el));
+      else 
+        % Same calculations as above, but with az/el in degrees
+        P_az = sinc(obj.width/obj.wavelength*sind(az));
+        P_el = sinc(obj.height/obj.wavelength*sind(el));
+      end
+      % Get the composite pattern gain
+      gain = P_az.*P_el;
+    end
+  end % Methods
   
   %% Private Methods
   methods (Access = private)
@@ -218,9 +239,9 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
         % Update list
         % -------------------------
         % 1. Azimuth and Elevation angles
-        case 'position'
+        case 'mainbeam_direction'
           [obj.azimuth,obj.elevation] = ...
-            cart2sph(obj.position(1),obj.position(2),obj.position(3));
+            cart2sph(obj.mainbeam_direction(1),obj.mainbeam_direction(2),obj.mainbeam_direction(3));
         case 'center_freq'
           obj.wavelength = obj.const.c/obj.center_freq;
         case 'wavelength'

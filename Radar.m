@@ -12,8 +12,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     updated_list = {}; % List of parameters updated due to initial_param
     % List of parameters that should be updated when we change the scale
     % from linear to dB or vice versa
-    % TODO: Make separate arrays for voltage v. power quantities
-    db_list = {'loss_system','noise_fig'};
+    power_list = {'loss_system','noise_fig'};
     
   end
   properties (Access = public)
@@ -67,62 +66,92 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   %% Public Methods
   methods
     
-    % For each target in the list, calculate the range measured by the
-    % radar, accounting for range ambiguities;
+    
     function range = getMeasuredRange(obj,targets)
+      % For each target in the list, calculate the range measured by the
+      % radar, accounting for range ambiguities;
+      
       range = zeros(numel(targets),1); % Pre-allocate
       for ii = 1:length(range)
-        range(ii) = mod(dot(targets(ii).position,obj.antenna.position),...
+        range(ii) = mod(dot(targets(ii).position,obj.antenna.mainbeam_direction),...
           obj.range_unambig);
       end
     end
     
-    % Calculate the measured doppler shift of each target in the list,
-    % accounting for ambiguities
+    
     function doppler = getMeasuredDoppler(obj,targets)
+      % Calculate the measured doppler shift of each target in the list,
+      % accounting for ambiguities
+      
       doppler = zeros(numel(targets),1); % Pre-allocate
       for ii = 1:length(doppler)
-        % Calculate the shift that would be measured with no ambiguities
-        true_doppler = dot(targets(ii).velocity,obj.antenna.position)*...
+        % Calculate the shift that would be measured with no ambiguities.
+        % NOTE: We define negative doppler as moving towards the radar, so there
+        % is a sign change.
+        position_vec = targets(ii).position - obj.antenna.position;
+        position_vec = position_vec / norm(position_vec);
+        true_doppler = -dot(targets(ii).velocity,position_vec)*...
           2/obj.antenna.wavelength;
-        % Shift can be measured unambiguously, send it straight to the
-        % output
-        if (abs(true_doppler) < obj.prf/2)
+       
+        if (abs(true_doppler) < obj.prf/2) 
+          % Shift can be measured unambiguously, send it straight to the
+          % output
           doppler(ii) = true_doppler;
-        else
-          % Measured shift is ambiguous; shift it into the measurable range
+        elseif mod(true_doppler,obj.prf) < obj.prf/2
+          % Aliased doppler is within the measurable range; output it
+          aliased_doppler = mod(true_doppler,obj.prf);
+          doppler(ii) = aliased_doppler;
+        elseif mod(true_doppler,obj.prf) > obj.prf/2
+          % Aliased doppler is still ambiguous. Shift it into the measurable
+          % range
           aliased_doppler = mod(true_doppler,obj.prf);
           doppler(ii) = aliased_doppler-obj.prf;
-        end
-      end
-    end
+        end % if
+      end % for
+    end % function
     
-    % Calculate the velocity measured by the radar for each target in the
-    % list. In this case, it's easier to find measured doppler and convert
-    % from there
+    
     function velocity = getMeasuredVelocity(obj,targets)
+      % Calculate the velocity measured by the radar for each target in the
+      % list. In this case, it's easier to find measured doppler and convert
+      % from there
+      
       doppler = obj.getMeasuredDoppler(targets);
       velocity = doppler*obj.wavelength/2;
     end
     
-    % Calculates the received power for the list of targets from the RRE
-    % NOTE: For now, assuming monostatic configuration (G_t = G_r)
+    function phase = getRoundTripPhase(obj,targets)
+      % Calculate the constant round-trip phase term for each target in the list
+      phase = -4*pi*obj.getMeasuredRange(targets)/obj.antenna.wavelength;
+      phase = mod(phase,2*pi);
+    end
     function power = getReceivedPower(obj,targets)
-      % Convert to linear before doing the calculation
-      if strncmpi(obj.scale,'db',1) 
-        G = 10^(obj.antenna.power_gain/10);
+      % Calculates the received power for the list of targets from the RRE.
+      % For now, assuming monostatic configuration (G_t = G_r)
+      
+      % Get the azimuth and elevation of the targets
+      pos_matrix = [targets.position]';
+      [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3)); 
+      % Convert to degree if necessary
+      if strncmpi(obj.antenna.angle_mode,'Degree',1)
+        az = (180/pi)*az;
+        el = (180/pi)*el;
+      end
+      % Get the antenna gain in the azimuth/elevation of the targets. Also
+      % convert to linear units if we're working in dB
+      if strncmpi(obj.scale,'db',1)
+        G = 10.^(obj.antenna.power_gain*...
+          obj.antenna.getNormPatternGain(az,el)/10);
         L_s = 10^(obj.loss_system/10);
       else
-        G = obj.antenna.power_gain;
+        G = obj.antenna.power_gain*obj.antenna.getNormPatternGain(az,el);
         L_s = obj.loss_system;
       end
+      % Get the target ranges as seen by the radar
       ranges = obj.getMeasuredRange(targets);
-      % Calculate the power from the RRE for each targets
-      power = zeros(numel(targets),1);
-      for ii = 1:numel(targets)
-        power(ii) = (obj.antenna.tx_power*G^2*obj.antenna.wavelength^2*...
-          targets(ii).rcs)/((4*pi)^3*L_s*ranges(ii)^4);
-      end
+      % Calculate the power from the RRE for each target
+      power = obj.antenna.tx_power*G.^2*obj.antenna.wavelength^2.*...
+        [targets(:).rcs]'./((4*pi)^3*L_s*ranges.^4);
     end
     
   end
@@ -131,11 +160,13 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   methods (Access = private)
     
     
-    % A helper functions to update dependent parameters that can't be
-    % marked explicitly dependent. For example, the prf should be able to
-    % update the pri and vice versa, so the user should be able to change
-    % either of them
+    
     function updateParams(obj, param_name, param_val)
+      % A helper functions to update dependent parameters that can't be
+      % marked explicitly dependent. For example, the prf should be able to
+      % update the pri and vice versa, so the user should be able to change
+      % either of them
+      
       % No parameter value given. Exit immediately to avoid breaking things
       if isempty(param_val)
         return
@@ -156,9 +187,10 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       end
     end % updateParams()
     
-    % Check if the given parameter has already been updated in a recursive
-    % updateParams call. If it hasn't, add it to the list and update it
+    
     function checkIfUpdated(obj, param_name, param_val)
+      % Check if the given parameter has already been updated in a recursive
+      % updateParams call. If it hasn't, add it to the list and update it
       if ~any(strcmp(param_name, obj.updated_list))
         if isempty(obj.updated_list)
           obj.initial_param = param_name;
