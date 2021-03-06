@@ -13,8 +13,8 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     % List of parameters that should be updated when we change the scale
     % from linear to dB or vice versa
     power_list = {'loss_system','noise_fig'};
-    
   end
+  
   properties (Access = public)
     antenna = Antenna();
     prf;               % Pulse repetition frequency
@@ -31,6 +31,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   
   %% Setter methods
   methods
+    
     function set.prf(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.prf = val;
@@ -49,14 +50,17 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   %% Getter Methods
   methods
     
+    % Calculate the unambiguous velocity
     function val = get.velocity_unambig(obj)
       val = obj.antenna.wavelength*obj.prf/4;
     end
     
+    % Calculate the unambiguous range
     function val = get.range_unambig(obj)
       val = obj.const.c*obj.pri/2;
     end
     
+    % Cac
     function val = get.doppler_unambig(obj)
       val = obj.prf/2;
     end
@@ -70,12 +74,18 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     function range = getMeasuredRange(obj,targets)
       % For each target in the list, calculate the range measured by the
       % radar, accounting for range ambiguities;
-      
-      range = zeros(numel(targets),1); % Pre-allocate
+      range = obj.getTrueRange(targets);
       for ii = 1:length(range)
-        range(ii) = mod(dot(targets(ii).position,obj.antenna.mainbeam_direction),...
-          obj.range_unambig);
+        % Get the projection of the position vector onto the mainbeam pointing
+        % vector
+        range(ii) = mod(range(ii),obj.range_unambig);
       end
+    end
+    
+    function range = getTrueRange(obj,targets)
+      % For each target in the list, calculate the true range of the target from
+      % the radar
+      range = vecnorm([targets(:).position]-obj.antenna.position)';
     end
     
     
@@ -92,8 +102,8 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
         position_vec = position_vec / norm(position_vec);
         true_doppler = -dot(targets(ii).velocity,position_vec)*...
           2/obj.antenna.wavelength;
-       
-        if (abs(true_doppler) < obj.prf/2) 
+        
+        if (abs(true_doppler) < obj.prf/2)
           % Shift can be measured unambiguously, send it straight to the
           % output
           doppler(ii) = true_doppler;
@@ -125,41 +135,48 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       phase = -4*pi*obj.getMeasuredRange(targets)/obj.antenna.wavelength;
       phase = mod(phase,2*pi);
     end
+    
     function power = getReceivedPower(obj,targets)
       % Calculates the received power for the list of targets from the RRE.
       % For now, assuming monostatic configuration (G_t = G_r)
       
+      % Convert everything to linear for our calculations, but keep track of
+      % whether or not we need to go back to dB
+      was_db = false;
+      if (strcmpi(obj.scale,'db'))
+        obj.scale = 'linear';
+        was_db = true;
+      end
+      
       % Get the azimuth and elevation of the targets
       pos_matrix = [targets.position]';
-      [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3)); 
+      [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
       % Convert to degree if necessary
-      if strncmpi(obj.antenna.angle_mode,'Degree',1)
+      if strncmpi(obj.antenna.angle_unit,'Degree',1)
         az = (180/pi)*az;
         el = (180/pi)*el;
       end
+      
       % Get the antenna gain in the azimuth/elevation of the targets. Also
       % convert to linear units if we're working in dB
-      if strncmpi(obj.scale,'db',1)
-        G = 10.^(obj.antenna.power_gain*...
-          obj.antenna.getNormPatternGain(az,el)/10);
-        L_s = 10^(obj.loss_system/10);
-      else
-        G = obj.antenna.power_gain*obj.antenna.getNormPatternGain(az,el);
-        L_s = obj.loss_system;
-      end
+      G = obj.antenna.power_gain*obj.antenna.getNormPatternGain(az,el).^2;
       % Get the target ranges as seen by the radar
       ranges = obj.getMeasuredRange(targets);
       % Calculate the power from the RRE for each target
       power = obj.antenna.tx_power*G.^2*obj.antenna.wavelength^2.*...
-        [targets(:).rcs]'./((4*pi)^3*L_s*ranges.^4);
+        [targets(:).rcs]'./((4*pi)^3*obj.loss_system*ranges.^4);
+      
+      % Convert back to dB if necessary
+      if was_db
+        power = 10*log10(power);
+        obj.scale = 'db';
+      end
     end
     
   end
   
   %% Private Methods
   methods (Access = private)
-    
-    
     
     function updateParams(obj, param_name, param_val)
       % A helper functions to update dependent parameters that can't be

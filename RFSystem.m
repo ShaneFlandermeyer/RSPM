@@ -15,10 +15,10 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     updated_list = {}; % List of parameters updated due to initial_param
     % List of parameters that should be updated when we change the scale
     % from linear to dB or vice versa
-    power_quantities = {'loss_system','noise_fig'}; 
+    power_quantities = {'loss_system','noise_fig'};
     voltage_quantities = {};
-    
   end
+  
   
   % Target properties
   properties (Access = public)
@@ -26,10 +26,12 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     loss_system;       % System loss (dB)
     noise_fig;         % Noise figure (dB)
     temperature_noise; % Input noise temperature
+    bandwidth;         % System bandwidth
   end % Public properties
   
   % Dependent properties
   properties (Dependent)
+    power_noise;
     
   end % Dependent Properties
   
@@ -44,14 +46,17 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     % Set the scale to dB or Linear
     function set.scale(obj,val)
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'linear',1)
+      if strncmpi(val,'linear',1) % && ~strncmpi(obj.scale,'linear',1)
         % Change all voltage/power quantities to linear scale
         obj.convertToLinear();
-      elseif strncmpi(val,'db',1)
+        obj.scale = 'Linear';
+        
+      elseif strncmpi(val,'db',1) && ~strncmpi(obj.scale,'db',1)
         % Change all voltage/power quantities to dB scale
         obj.convertTodB();
+        obj.scale = 'dB';
+        
       end
-      obj.scale = val;
       % Change sub-objects to linear units if any exist
       props = properties(obj);
       for ii = 1:length(props)
@@ -69,6 +74,19 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   end
   %% Getter methods
   methods
+    function power = get.power_noise(obj)
+      was_db = false;
+      if (strcmpi(obj.scale,'db'))
+        obj.scale = 'linear';
+        was_db = true;
+      end
+      power = obj.const.k*obj.temperature_noise*obj.bandwidth*obj.noise_fig;
+      % Conversion to dB
+      if was_db
+        power = 10*log10(power);
+        obj.scale = 'db';
+      end
+    end
     
   end
   
@@ -128,22 +146,32 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   end % Private methods
   %% Hidden Methods (DO NOT EDIT THESE)
   methods (Hidden)
+    
     function value = properties( obj )
+      % Put the properties list in sorted order
       propList = sort( builtin("properties", obj) );
+      % Move any control switch parameters to the top of the output
+      switches = {'scale', 'const'}';
+      propList(ismember(propList,switches)) = [];
+      propList = cat(1,switches,propList);
       if nargout == 0
         disp(propList);
       else
         value = propList;
       end
     end
+    
     function value = fieldnames( obj )
       value = sort( builtin( "fieldnames", obj ) );
     end
   end
+  
   methods (Access = protected)
+    
     function group = getPropertyGroups( obj )
       props = properties( obj );
       group = matlab.mixin.util.PropertyGroup( props );
     end
+    
   end
 end % class

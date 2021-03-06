@@ -10,13 +10,10 @@ classdef Target < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   properties (Access = public)
     position = zeros(3,1);        % Target position in XYZ cartesian coordinates (m)
     velocity = zeros(3,1);        % Target velocity in XYZ cartesian coordinates (m/s)
-    reference_position = zeros(3,1); % The reference point from which the 
-                                  %  range is calculates
     rcs = 0;                      % Target radar cross section (m^2)
   end % Public properties
   % Dependent properties
   properties (Dependent)
-    range;    % Target absolute range (m)
   end % Dependent Properties
   
   %% Setter methods
@@ -53,11 +50,7 @@ classdef Target < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   end
   %% Getter methods
   methods
-    
-    function val = get.range(obj)
-      val = norm(obj.position-obj.reference_position);
-    end
-    
+
   end
   
   %% Hidden Methods

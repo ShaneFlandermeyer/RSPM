@@ -25,7 +25,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   % Antenna Properties
   properties (Access = public)
-    angle_mode = 'Radian';
+    angle_unit = 'Radian';
     scale = 'dB';
     width = 0; % Width of the antenna aperture
     height = 0; % Height of the antenna aperture
@@ -51,14 +51,15 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     
     function set.scale(obj,val)
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'linear',1)
+      if strncmpi(val,'linear',1) && ~strncmpi(obj.scale,'linear',1)
         % Change all voltage/power quantities to linear scale
         obj.convertToLinear();
-      elseif strncmpi(val,'db',1)
+        obj.scale = 'Linear';
+      elseif strncmpi(val,'db',1) && ~strncmpi(obj.scale,'db',1)
         % Change all voltage/power quantities to dB scale
         obj.convertTodB();
+        obj.scale = 'dB';
       end
-      obj.scale = val;
     end
     function set.width(obj,val)
       validateattributes(val,{'numeric'},{'positive'});
@@ -91,15 +92,15 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       obj.checkIfUpdated('mainbeam_direction',val); % Update dependent properties
     end
     
-    function set.angle_mode(obj,val)
+    function set.angle_unit(obj,val)
       validateattributes(val,{'string','char'},{});
       if strncmpi(val,'Degree',1)
         % Convert angle measures to degree
-        obj.angle_mode = 'Degree';
+        obj.angle_unit = 'Degree';
         obj.convertToDegree();
       elseif strncmpi(val,'Radian',1)
         % Convert angle measures to radians
-        obj.angle_mode = 'Radian';
+        obj.angle_unit = 'Radian';
         obj.convertToRadian();
       end
     end
@@ -134,7 +135,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     % ASSUMPTION: Sinc pattern
     function beamwidth = get.beamwidth_azimuth_3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.width;
-      if (strncmpi(obj.angle_mode,'Degree',1))
+      if (strncmpi(obj.angle_unit,'Degree',1))
         beamwidth = (180/pi)*beamwidth;
       end
     end
@@ -143,7 +144,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     % ASSUMPTION: Sinc pattern
     function beamwidth = get.beamwidth_elevation_3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.height;
-      if (strncmpi(obj.angle_mode,'Degree',1))
+      if (strncmpi(obj.angle_unit,'Degree',1))
         beamwidth = (180/pi)*beamwidth;
       end
     end
@@ -151,7 +152,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     % Get the maximum power gain for the aperture from the 3db beamwidths
     % ASSUMPTION: Rectangular aperture
     function G = get.power_gain(obj)
-      if strncmpi(obj.angle_mode,'Degree',1)
+      if strncmpi(obj.angle_unit,'Degree',1)
         G = 26e3/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
       else
         G = 7.9/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
@@ -170,7 +171,7 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     % azimuth/elevation
     % ASSUMPTION: Rectangular Aperture
     function gain = getNormPatternGain(obj,az,el)
-      if strncmpi(obj.angle_mode,'Radian',1)
+      if strncmpi(obj.angle_unit,'Radian',1)
         % Get the separable azimuth component
         P_az = sinc(obj.width/obj.wavelength*sin(az));
         % Get the separable elevation component
@@ -274,7 +275,12 @@ classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   methods (Hidden)
     % Sort the object properties alphabetically
     function value = properties( obj )
+      % Put the properties list in sorted order
       propList = sort( builtin("properties", obj) );
+      % Move any control switch parameters to the top of the output
+      switches = {'scale','angle_unit'}';
+      propList(ismember(propList,switches)) = [];
+      propList = cat(1,switches,propList);
       if nargout == 0
         disp(propList);
       else
