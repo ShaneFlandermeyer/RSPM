@@ -54,27 +54,20 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   
   properties (Dependent)
     antenna;
-    waveform;          % Transmitted waveform
-    prf;               % Pulse repetition frequency
-    pri;               % Pulse repetition interval
+    waveform; 
+    prf;    
+    pri; 
     num_pulses;
     range_unambig;
     velocity_unambig;
     doppler_unambig;
   end
   
-  %% Setters/Getters
+  %% Setters
   methods
-    function out = get.num_pulses(obj)
-      out = obj.d_num_pulses;
-    end
     
     function set.num_pulses(obj,val)
       obj.d_num_pulses = val;
-    end
-    
-    function out = get.prf(obj)
-      out = obj.d_prf;
     end
     
     function set.prf(obj,val)
@@ -83,18 +76,10 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       obj.d_pri = 1 / obj.d_prf;
     end
     
-    function out = get.pri(obj)
-      out = obj.d_pri;
-    end
-    
     function set.pri(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_pri = val;
       obj.d_prf = 1 / obj.d_pri;
-    end
-    
-    function out = get.waveform(obj)
-      out = obj.d_waveform;
     end
     
     function set.waveform(obj,val)
@@ -105,10 +90,6 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       end
     end
     
-    function out = get.antenna(obj)
-      out = obj.d_antenna;
-    end
-    
     function set.antenna(obj,val)
       if (isa(val,'Antenna'))
         obj.antenna = val;
@@ -116,24 +97,47 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
         error('Must be derived from an Antenna object')
       end
     end
-    
-    % Calculate the unambiguous velocity
-    function val = get.velocity_unambig(obj)
-      val = obj.antenna.wavelength*obj.prf/4;
-    end
-    
-    % Calculate the unambiguous range
-    function val = get.range_unambig(obj)
-      val = obj.const.c*obj.pri/2;
-    end
-    
-    % Calculate the unambiguous doppler
-    function val = get.doppler_unambig(obj)
-      val = obj.prf/2;
-    end
         
   end
   
+  %% Getters
+  methods   
+    
+    function out = get.num_pulses(obj)
+      out = obj.d_num_pulses;
+    end
+    
+    function out = get.prf(obj)
+      out = obj.d_prf;
+    end
+    
+    function out = get.pri(obj)
+      out = obj.d_pri;
+    end
+    
+    function out = get.waveform(obj)
+      out = obj.d_waveform;
+    end
+    
+    function out = get.antenna(obj)
+      out = obj.d_antenna;
+    end
+    
+    function out = get.doppler_unambig(obj)
+      % Calculate the unambiguous doppler
+      out = obj.prf/2;
+    end
+   
+    function out = get.range_unambig(obj) 
+      % Calculate the unambiguous range
+      out = obj.const.c*obj.pri/2;
+    end
+    
+    function out = get.velocity_unambig(obj)
+      % Calculate the unambiguous velocity
+      out = obj.antenna.wavelength*obj.prf/4;
+    end
+  end
   %% Public Methods
   methods
     
