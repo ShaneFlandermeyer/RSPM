@@ -1,4 +1,3 @@
-# radar-object
 # Object-Oriented Radar Simulation Tools
 
 The object-oriented paradigm seems like a natural choice for radar signal
@@ -14,13 +13,33 @@ The following objects have currently been implemented
 ## Antenna
 **TODO**
 
-## LFM
-**TODO**
+## LFM < PulsedWaveform
+A linear frequency modulated waveform object
 
-## PulsedWaveform
-**TODO**
+TODO: Currently only allows for upchirps about complex baseband
 
-## Radar
+### Parameters
+- **pulse_width:** The chirp duration (s)
+
+- **bandwidth:** Sweep bandwidth (Hz)
+### Methods
+- **waveform(obj):** Creates an LFM waveform from the object parameters
+
+## PulsedWaveform < Waveform
+
+An Abstract class representing a pulsed radar waveform
+
+### Parameters
+- **pulse_width:** The duration of the pulse (s)
+
+- **time_bandwidth:** The time-bandwidth product of the waveform
+
+### Methods
+- **ambiguityFunction:** Computes the ambiguity function for the waveform
+
+## Radar < RFSystem
+
+An object that holds all information about the radar being simulated. This is sorta a god object, and can contain instances of all other objects.
 
 ### Parameters
 - **antenna:** The antenna object used for the simulation. For now, only a monostatic configuration is supported.
@@ -54,14 +73,29 @@ number of pulses
 
 **TODO**
 
-## SimplePulse
+## SimplePulse < PulsedWaveform
 
-**TODO**
+### Methods
+- **waveform(obj):** Creates a simple pulse waveform with the parameters given by the object
 
 ## Target
 
-**TODO**
+An object representing a target. For now, this is just a point target
+
+### Parameters
+- **position:** The target's position in XYZ cartesian coordinates
+
+- **velocity:** The target's velocity in XYZ cartesian coordinates
+- **rcs:** The target's radar cross section (m<sup>2</sup>)
 
 ## Waveform
 
-**TODO**
+An abstract class representing a waveform (not necessarily just for radar)
+
+### Parameters
+- **samp_rate:** The ADC sample rate (samples/s). It may seem like this parameter belongs with the RFSystem object, but it is needed to generate the waveform data and there's no way to make that inheritance make sense
+
+- **normalization:** Defines the waveform normalization. The following options are allowed:
+  - 'None': No normalization
+  - 'Energy': Normalize the waveform to have unit energy
+  - 'Time-Bandwidth:' Normalize the waveform by time-bandwidth product
