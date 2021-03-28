@@ -1,7 +1,7 @@
 % A class representing an antenna. 
 %
-% TODO: Object currently assumes a rectangular, linear, single element
-% aperture. 
+% TODO: Make this an abstract class and implement subclasses for different
+% types of antennas.
 
 classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   

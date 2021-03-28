@@ -46,7 +46,7 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     % Set the scale to dB or Linear
     function set.scale(obj,val)
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'linear',1) % && ~strncmpi(obj.scale,'linear',1)
+      if strncmpi(val,'linear',1) && ~strncmpi(obj.scale,'linear',1)
         % Change all voltage/power quantities to linear scale
         obj.convertToLinear();
         obj.scale = 'Linear';
@@ -75,16 +75,14 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   %% Getter methods
   methods
     function power = get.power_noise(obj)
-      was_db = false;
       if (strcmpi(obj.scale,'db'))
-        obj.scale = 'linear';
-        was_db = true;
+          obj.convertToLinear();
       end
       power = obj.const.k*obj.temperature_noise*obj.bandwidth*obj.noise_fig;
       % Conversion to dB
-      if was_db
+      if (strcmpi(obj.scale,'db'))
         power = 10*log10(power);
-        obj.scale = 'db';
+        obj.convertTodB();
       end
     end
     
@@ -92,6 +90,23 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   
   %% Public Methods
   methods (Access = public)
+    
+    function out = addThermalNoise(obj,data)
+      % Adds thermal noise to the given data based on the noise power for the
+      % system. 
+      % 
+      % INPUTS:
+      %  - data: The data that the noise should be added to. There are no shape
+      %          requirements for this input
+      % OUTPUT: The noisy data
+      if (strcmpi(obj.scale,'db'))
+        power = 10^(obj.power_noise/10);
+      else
+        power = obj.power_noise;
+      end
+      noise = (randn(size(data)) + 1i*randn(size(data)))*sqrt(power/2);
+      out = data + noise;
+    end
     
   end % Public methods
   %% Private Methods
