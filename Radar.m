@@ -32,66 +32,90 @@
 %
 % Blame: Shane Flandermeyer
 classdef Radar < matlab.mixin.Copyable & RFSystem
-  %% Properties
-  % Constants
+  %% Physical constants
   properties (Constant = true)
     const = struct('c',299792458,'k',1.38064852e-23,'T0_k',290)
   end
   
-  % Private properties
+  %% Private properties
   properties (Access = private)
-    
-    initial_param; % First parameter updated in updateParams()
-    updated_list = {}; % List of parameters updated due to initial_param
     % List of parameters that should be updated when we change the scale
     % from linear to dB or vice versa
     power_list = {'loss_system','noise_fig'};
   end
   
-  properties (Access = public)
-    antenna = Antenna();
+  properties (Access = private)
+    d_antenna = Antenna();
+    d_waveform;
+    d_prf;
+    d_pri;
+    d_num_pulses;
+  end
+  
+  properties (Dependent)
+    antenna;
     waveform;          % Transmitted waveform
     prf;               % Pulse repetition frequency
     pri;               % Pulse repetition interval
     num_pulses;
-  end
-  
-  % Dependent properties: These cannot be set correctly, and are
-  % automatically calculated based on other parameters
-  properties (Dependent)
     range_unambig;
     velocity_unambig;
     doppler_unambig;
   end
   
-  %% Setter methods
+  %% Setters/Getters
   methods
+    function out = get.num_pulses(obj)
+      out = obj.d_num_pulses;
+    end
+    
+    function set.num_pulses(obj,val)
+      obj.d_num_pulses = val;
+    end
+    
+    function out = get.prf(obj)
+      out = obj.d_prf;
+    end
     
     function set.prf(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.prf = val;
-      obj.checkIfUpdated('prf',val);
+      obj.d_prf = val;
+      obj.d_pri = 1 / obj.d_prf;
+    end
+    
+    function out = get.pri(obj)
+      out = obj.d_pri;
     end
     
     function set.pri(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.pri = val;
-      obj.checkIfUpdated('pri',val);
+      obj.d_pri = val;
+      obj.d_prf = 1 / obj.d_pri;
+    end
+    
+    function out = get.waveform(obj)
+      out = obj.d_waveform;
     end
     
     function set.waveform(obj,val)
       if (isa(val,'Waveform'))
-        obj.waveform = val;
+        obj.d_waveform = val;
       else
         error('Must be derived from a Waveform object')
       end
     end
     
+    function out = get.antenna(obj)
+      out = obj.d_antenna;
+    end
     
-  end
-  
-  %% Getter Methods
-  methods
+    function set.antenna(obj,val)
+      if (isa(val,'Antenna'))
+        obj.antenna = val;
+      else
+        error('Must be derived from an Antenna object')
+      end
+    end
     
     % Calculate the unambiguous velocity
     function val = get.velocity_unambig(obj)
@@ -103,11 +127,11 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       val = obj.const.c*obj.pri/2;
     end
     
-    % Cac
+    % Calculate the unambiguous doppler
     function val = get.doppler_unambig(obj)
       val = obj.prf/2;
     end
-    
+        
   end
   
   %% Public Methods
@@ -424,50 +448,5 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     end
     
   end
-  
-  %% Private Methods
-  methods (Access = private)
-    
-    function updateParams(obj, param_name, param_val)
-      % A helper functions to update dependent parameters that can't be
-      % marked explicitly dependent. For example, the prf should be able to
-      % update the pri and vice versa, so the user should be able to change
-      % either of them
-      
-      % No parameter value given. Exit immediately to avoid breaking things
-      if isempty(param_val)
-        return
-      end
-      
-      switch (param_name)
-        case 'prf'
-          obj.pri = 1/obj.prf;
-        case 'pri'
-          obj.prf = 1/obj.pri;
-      end
-      
-      % Original parameters have updated all its dependent parameters. We
-      % can safely empty the list of parameters that have already been
-      % updated for the next assignment
-      if (strcmp(obj.initial_param, param_name))
-        obj.updated_list = {};
-      end
-    end % updateParams()
-    
-    
-    function checkIfUpdated(obj, param_name, param_val)
-      % Check if the given parameter has already been updated in a recursive
-      % updateParams call. If it hasn't, add it to the list and update it
-      if ~any(strcmp(param_name, obj.updated_list))
-        if isempty(obj.updated_list)
-          obj.initial_param = param_name;
-        end
-        obj.updated_list{end+1} = param_name;
-        obj.updateParams(param_name, param_val);
-      end
-    end
-    
-  end
-  
   
 end

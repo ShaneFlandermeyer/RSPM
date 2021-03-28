@@ -20,42 +20,69 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   end
   
   
-  % Target properties
-  properties (Access = public)
-    scale = 'dB';      % Specify dB or linear units
-    loss_system;       % System loss (dB)
-    noise_fig;         % Noise figure (dB)
-    temperature_noise; % Input noise temperature
-    bandwidth;         % System bandwidth
-  end % Public properties
+  %   % Target properties
+  %   properties (Access = public)
+  %     scale = 'dB';      % Specify dB or linear units
+  %     loss_system;       % System loss (dB)
+  %     noise_fig;         % Noise figure (dB)
+  %     temperature_noise; % Input noise temperature
+  %     bandwidth;         % System bandwidth
+  %   end % Public properties
+  %
+  %   % Dependent properties
+  %   properties (Dependent)
+  %     power_noise;
+  %   end % Dependent Properties
   
-  % Dependent properties
+  properties (Access = private)
+    d_scale = 'dB';
+    d_loss_system;
+    d_noise_fig;
+    d_temperature_noise;
+    d_bandwidth;
+  end
+  
   properties (Dependent)
     power_noise;
-    
-  end % Dependent Properties
+    scale;
+    loss_system;
+    noise_fig;
+    temperature_noise;
+    bandwidth;
+  end
   
   %% Setter Methods
   methods
     
-    function set.loss_system(obj,val)
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.loss_system = val;
+    function out = get.noise_fig(obj)
+      out = obj.d_noise_fig;
     end
     
-    % Set the scale to dB or Linear
+    function set.noise_fig(obj,val)
+      obj.d_noise_fig = val;
+    end
+    
+    function out = get.loss_system(obj)
+      out = obj.d_loss_system;
+    end
+    
+    function set.loss_system(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.d_loss_system = val;
+    end
+    
+    function out = get.scale(obj)
+      out = obj.d_scale;
+    end
+    
     function set.scale(obj,val)
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'linear',1) && ~strncmpi(obj.scale,'linear',1)
-        % Change all voltage/power quantities to linear scale
+      if strncmpi(val,'Linear',1)
+        obj.d_scale = 'Linear';
         obj.convertToLinear();
-        obj.scale = 'Linear';
-        
-      elseif strncmpi(val,'db',1) && ~strncmpi(obj.scale,'db',1)
-        % Change all voltage/power quantities to dB scale
+      elseif strncmpi(val,'dB',1)
+        obj.d_scale = 'dB';
         obj.convertTodB();
-        obj.scale = 'dB';
-        
       end
       % Change sub-objects to linear units if any exist
       props = properties(obj);
@@ -64,19 +91,55 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
           obj.(props{ii}).scale = val;
         end
       end
+      
+    end
+    %     % Set the scale to dB or Linear
+    %     function set.scale(obj,val)
+    %       validateattributes(val,{'string','char'},{});
+    %       if strncmpi(val,'linear',1) && ~strncmpi(obj.scale,'linear',1)
+    %         % Change all voltage/power quantities to linear scale
+    %         obj.convertToLinear();
+    %         obj.scale = 'Linear';
+    %
+    %       elseif strncmpi(val,'db',1) && ~strncmpi(obj.scale,'db',1)
+    %         % Change all voltage/power quantities to dB scale
+    %         obj.convertTodB();
+    %         obj.scale = 'dB';
+    %
+    %       end
+    %       % Change sub-objects to linear units if any exist
+    %       props = properties(obj);
+    %       for ii = 1:length(props)
+    %         if isobject(obj.(props{ii})) && isprop(obj.(props{ii}),'scale')
+    %           obj.(props{ii}).scale = val;
+    %         end
+    %       end
+    %     end
+    
+    function out = get.temperature_noise(obj)
+      out = obj.d_temperature_noise;
     end
     
     function set.temperature_noise(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.temperature_noise = val;
+      obj.d_temperature_noise = val;
     end
+    
+    function out = get.bandwidth(obj)
+      out = obj.d_bandwidth;
+    end
+    
+    function set.bandwidth(obj,val)
+      obj.d_bandwidth = val;
+    end
+    
     
   end
   %% Getter methods
   methods
     function power = get.power_noise(obj)
       if (strcmpi(obj.scale,'db'))
-          obj.convertToLinear();
+        obj.convertToLinear();
       end
       power = obj.const.k*obj.temperature_noise*obj.bandwidth*obj.noise_fig;
       % Conversion to dB
@@ -93,8 +156,8 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     
     function out = addThermalNoise(obj,data)
       % Adds thermal noise to the given data based on the noise power for the
-      % system. 
-      % 
+      % system.
+      %
       % INPUTS:
       %  - data: The data that the noise should be added to. There are no shape
       %          requirements for this input
@@ -110,35 +173,7 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     
   end % Public methods
   %% Private Methods
-  methods (Access = private)
-    
-    function updateParams(obj, param_name, param_val)
-      % No parameter value given. Exit immediately to avoid breaking things
-      if isempty(param_val)
-        return
-      end
-      
-      switch param_name
-      end
-      
-      % Original parameters have updated all its dependent parameters. We
-      % can safely empty the list of parameters that have already been
-      % updated for the next assignment
-      if (strcmp(obj.initial_param, param_name))
-        obj.updated_list = {};
-      end
-    end % updateParams()
-    
-    function checkIfUpdated(obj, param_name, param_val)
-      if ~any(strcmp(param_name, obj.updated_list))
-        if isempty(obj.updated_list)
-          obj.initial_param = param_name;
-        end
-        obj.updated_list{end+1} = param_name;
-        obj.updateParams(param_name, param_val);
-      end
-    end
-    
+  methods
     % Convert all parameters that are currently in linear units to dB
     function convertTodB(obj)
       for ii = 1:numel(obj.power_quantities)
@@ -151,14 +186,18 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     
     % Convert all parameters that are currently in dB to linear units
     function convertToLinear(obj)
+      
       for ii = 1:numel(obj.power_quantities)
         obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
       end
+      
       for ii = 1:numel(obj.voltage_quantities)
         obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
       end
+      
     end
   end % Private methods
+  
   %% Hidden Methods (DO NOT EDIT THESE)
   methods (Hidden)
     
