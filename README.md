@@ -11,7 +11,7 @@ provides a more intuitive representation of real life than functional programmin
 The following objects have currently been implemented
 
 ## Antenna
-**TODO**
+**TODO: This parameter is going to be broken up into many objects soon, so I'm punting on the documentation here**
 
 ## LFM < PulsedWaveform
 A linear frequency modulated waveform object
@@ -71,7 +71,19 @@ number of pulses
 
 ## RFSystem
 
-**TODO**
+An abstract class representation of an RF front end
+
+### Parameters:
+- **bandwidth:** The receiver bandwidth (Hz)
+
+- **loss_system:** System loss factor
+- **noise_fig:** System noise figure
+- **power_noise:** The receiver noise power
+- **scale:** Specifies whether parameters should be given in linear or dB scale
+- **temperature_noise:** Input noise temperature
+
+### Methods
+- **addThermalNoise(obj,data):** Adds thermal noise to the input data based on the system noise power.
 
 ## SimplePulse < PulsedWaveform
 
