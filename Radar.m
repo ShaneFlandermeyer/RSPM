@@ -1,31 +1,5 @@
 % A class representing a Radar system
 %
-% PARAMETERS:
-% - antenna: Antenna object
-% - waveform: Waveform object
-% - prf: Pulse repetition frequency
-% - pri: Pulse repetition interval
-% - range_unambig: Unambiguous range
-% - velocity_unambig: Unambiguous velocity
-% - doppler_unambig: Unambiguous doppler
-%
-% METHODS:
-% - measuredRange(obj,targets): Get the range of each target in the list
-%                                  measured by the radar
-% - measuredVelocity(obj,targets): Get the velocity of each target in
-%                                     the list measured by the radar
-% - roundTripPhase(obj,targets): Calculate the constant round-trip phase
-%                                   term for each target in the list
-%
-% - receivedPower(obj,targets): Calculates the received power for the
-%                                  list of targets from the RRE.
-%                                  For now, assuming monostatic configuration
-%                                  (G_t = G_r)
-% - pulseTrain(obj,num_pulses): Create a pulse train vector of num_pulses
-%                               repetitions of the waveform data
-% - pulseMatrix(obj,num_pulses): Create a pulse matrix of size
-%                                length(waveform.data) x num_pulses, where
-%                                each column is a copy of the waveform
 % TODO:
 % - Allow the user to create a pulse train with multiple types of waveforms
 % - Add multistatic capabilities
@@ -44,6 +18,19 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     power_list = {'loss_system','noise_fig'};
   end
   
+  % Members exposed to the outside world
+  properties (Dependent)
+    antenna;          % Antenna object
+    waveform;         % Waveform object
+    prf;              % Pulse repetition frequency (Hz)
+    pri;              % Pulse repetition interval (s)
+    num_pulses;       % Number of pulses in a CPI
+    range_unambig;    % Unambiguous range (m)
+    velocity_unambig; % Unambiguous velocity (m/s)
+    doppler_unambig;  % Unambiguous doppler frequency(Hz)
+  end
+  
+  % Internal class data
   properties (Access = private)
     d_antenna = Antenna();
     d_waveform;
@@ -51,17 +38,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     d_pri;
     d_num_pulses;
   end
-  
-  properties (Dependent)
-    antenna;
-    waveform; 
-    prf;    
-    pri; 
-    num_pulses;
-    range_unambig;
-    velocity_unambig;
-    doppler_unambig;
-  end
+
   
   %% Setters
   methods
@@ -138,6 +115,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       out = obj.antenna.wavelength*obj.prf/4;
     end
   end
+  
   %% Public Methods
   methods
     
@@ -231,7 +209,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       % convert to linear units if we're working in dB
       G = obj.antenna.power_gain*obj.antenna.getNormPatternGain(az,el).^2;
       % Get the target ranges as seen by the radar
-      ranges = obj.measuredRange(targets);
+      ranges = obj.trueRange(targets);
       % Calculate the power from the RRE for each target
       power = obj.antenna.tx_power*G.^2*obj.antenna.wavelength^2.*...
         [targets(:).rcs]'./((4*pi)^3*obj.loss_system*ranges.^4);
@@ -243,7 +221,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       end
     end % receivedPower()
     
-    function pulses = pulseTrain(obj)
+    function pulses = pulseBurstWaveform(obj)
       % Returns an LM x 1 pulse train, where L is the number of fast time
       % samples of the waveform and M is the number of pulses to be
       % transmitted
@@ -253,7 +231,13 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       padded_pulse = [obj.waveform.data;zeros(num_zeros,1)];
       % Stack num_pulses padded pulses on top of each other
       pulses = repmat(padded_pulse,obj.num_pulses,1);
-    end % pulseTrain()
+    end % pulseBurstWaveform()
+    
+    function mf = pulseBurstMatchedFilter(obj)
+      % Returns an LM x 1 pulse train containing M copies of the length-L
+      % matched filter vector
+      mf = flipud(conj(obj.pulseBurstWaveform()));
+    end % pulseBurstMatchedFilter()
     
     function pulses = pulseMatrix(obj)
       % Returns an L x M pulse train, where L is the number of fast time
@@ -345,6 +329,53 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       
     end % simulateTargets()
     
+    function out = simulateTargetsPulseBurst(obj,targets,data)
+      % Simulate the effects of each target in the list on the input pulse burst
+      % waveform. Target effects are applied on a per-sample basis, but the stop
+      % and hop model is assumed so the amplitudes, delays, and doppler shifts
+      % are only calculated once per pulse. This method produces an identical
+      % output as simulateTargets(), but it's about 10x slower so it isn't
+      % actually used in project 2.
+      
+      was_db = false;
+      if (strcmpi(obj.scale,'db'))
+        obj.scale = 'linear';
+        was_db = true;
+      end
+      
+      % Time indices of the start of each pulse
+      Tadc = 1/obj.waveform.samp_rate;
+      t = (0:Tadc:obj.pri*obj.num_pulses-Tadc)';
+      pri_length = obj.pri*obj.waveform.samp_rate;
+      out = zeros(size(data));
+      % Get the shifted returns for each target then sum them together
+      measured_range = 0;
+      delay = 0;
+      dopp_shift = 0;
+      amplitude = 0;
+      for ii = 1:length(targets)
+        for jj = 1:numel(data)
+          % Calculate new target parameters ONLY on the first sample of each new
+          % pulse (stop and hop assumption)
+          if (jj == 1 || ~mod(jj,pri_length))
+            measured_range = obj.measuredRange(targets(ii));
+            delay = round((2*measured_range/obj.const.c)*obj.waveform.samp_rate);
+            dopp_shift = exp(1i*2*pi*obj.trueDoppler(targets(ii))*t(jj));
+            amplitude = sqrt(obj.receivedPower(targets(ii)));
+          end
+          % Scale and shift each sample according to the above calculations
+          if jj > delay
+            out(jj) = out(jj) + data(jj-delay)*amplitude*dopp_shift;
+          end
+        end
+      end
+      
+      % Convert back to dB if necessary
+      if was_db
+        obj.scale = 'db';
+      end
+    end % simulateTargetsPulseBurst()
+    
     function [mf_resp,range_axis] = matchedFilterResponse(obj,data)
       
       % Calculate the matched filter response of the given input data using
@@ -368,8 +399,9 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       mf_length = size(obj.waveform.data,1)+size(data,1)-1;
       % Pad the matched filter and data vector (or matrix) to the size of
       % the matched filter output
-      mf = [flipud(conj(obj.waveform.data));...
-        zeros(mf_length-size(obj.waveform.data,1),1)];
+      waveform_norm = obj.waveform.data ./ norm(obj.waveform.data);
+      mf = [flipud(conj(waveform_norm));...
+        zeros(mf_length-size(waveform_norm,1),1)];
       data = [data;zeros(mf_length-size(data,1),size(data,2))];
       % Calculate the matched filter output in the frequency domain
       mf_resp = zeros(size(data));
@@ -411,7 +443,6 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       end
       % Perform doppler processing over all the pulses
       rd_map = fftshift(fft(data,obj.num_pulses*oversampling,2),2);
-%       rd_map = rd_map*obj.num_pulses;
       % Create the doppler axis for the range-doppler map
       velocity_step = 2*obj.velocity_unambig/obj.num_pulses;
       velocity_axis = (-obj.velocity_unambig:velocity_step:...

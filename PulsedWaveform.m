@@ -1,11 +1,6 @@
 % An abstract class representing a pulsed radar waveform.
 %
-% PARAMETERS:
-% - pulse_width: The length of the pulse in seconds
-% - time_bandwidth: The time-bandwidth product of the waveform
-%
-% PUBLIC METHODS
-% - ambiguityFunction(): Calculates the ambiguity function for the waveform
+% Blame: Shane Flandermeyer
 
 classdef (Abstract) PulsedWaveform < Waveform
   properties (Abstract)
@@ -16,12 +11,10 @@ classdef (Abstract) PulsedWaveform < Waveform
     time_bandwidth;  % Time-bandwidth product for the waveform
   end
   
-  %% Abstract Methods
-  methods (Abstract)
-  end
   %% Getters/Setters
   methods
     function bt = get.time_bandwidth(obj)
+      % Calculate the time-bandwidth product of the waveform
       bt = obj.pulse_width*obj.bandwidth;
     end
   end
@@ -29,6 +22,19 @@ classdef (Abstract) PulsedWaveform < Waveform
   %% Public Methods
   methods (Access = public)
     function [af,t,fd] = ambiguityFunction(obj)
+      % Calculate the ambiguity function for the given waveform
+      %
+      % INPUT: A waveform object
+      % 
+      % OUTPUTS: 
+      %  - af: An L x M matrix of values corresponding to each delay and doppler
+      %        of the ambiguity function, where L is the number of delay points
+      %        and M is the number of doppler points
+      %
+      %  - t: The L x 1 delay axis
+      %
+      %  - fd: The M x 1 doppler axis
+      %
       % No waveform generated
       delays = (-(length(obj.data)-1):(length(obj.data)-1))';
       num_delays = length(delays);
@@ -47,6 +53,7 @@ classdef (Abstract) PulsedWaveform < Waveform
       af = af*num_doppler; % Scaling factor
       t = delays/obj.samp_rate;
     end
+    
   end
 
   %% Private Methods
@@ -59,9 +66,12 @@ classdef (Abstract) PulsedWaveform < Waveform
       else
         v = vreal;
       end
+      
       if tau >= 0
+        % Shift forward in time
         v(1:length(x)-tau) = x(1+tau:length(x));
       else
+        % Shift backward in time
         v(1-tau:length(x)) = x(1:length(x)+tau);
       end
     end

@@ -11,7 +11,11 @@ provides a more intuitive representation of real life than functional programmin
 The following objects have currently been implemented
 
 ## Antenna
+<<<<<<< HEAD
+**TODO**
+=======
 **TODO: This parameter is going to be broken up into many objects soon, so I'm punting on the documentation here**
+>>>>>>> dcf14381961a293e0993cd6856e36fef6d494aa3
 
 ## LFM < PulsedWaveform
 A linear frequency modulated waveform object
@@ -64,14 +68,21 @@ of the targets relative to the radar
 - **pulseTrain(obj):** Returns an LM x 1 pulse train of the waveform parameter object, where L is the number of fast time samples in a PRI and M is the
 number of pulses
 - **pulseMatrix(obj):** Returns an L x M matrix of copies of the waveform parameter object, where L is the number of fast time samples and M is the number of pulses
+<<<<<<< HEAD
+- **simulateTargets(obj, targets, data):** Given a list of targets and sampled input data, returns the superposition of all targets' delay, doppler shift and amplitude scaling on the data
+=======
 - **simulateTargets(obj, targets, data):** Given a list of targets and sampled input data,  returns the superposition of all targets' delay, doppler shift and amplitude scaling on the data by scaling and shifting on the pulse level
 - **simulateTargetsPulseBurst(obj, targets, data):** Given a list of targets and sampled input data, returns the superposition of all targets' delay, doppler shift and amplitude scaling on the data by scaling and shifting on the sample level
+>>>>>>> dcf14381961a293e0993cd6856e36fef6d494aa3
 - **matchedFilterResponse(obj, data):** Returns the matched filter response of the input data, where the matched filter is calculated from the waveform parameter
 - **dopplerProcessing(obj, data, oversampling):** Performs doppler processing on the given input data, where the doppler bins are oversampled by the given oversampling factor
 - **SNR(obj, targets):** Given a list of target objects, returns the SNR for each target (before range-doppler processing, not accounting for the waveform)
 
 ## RFSystem
 
+<<<<<<< HEAD
+**TODO**
+=======
 An abstract class representation of an RF front end
 
 ### Parameters:
@@ -85,6 +96,7 @@ An abstract class representation of an RF front end
 
 ### Methods
 - **addThermalNoise(obj,data):** Adds thermal noise to the input data based on the system noise power.
+>>>>>>> dcf14381961a293e0993cd6856e36fef6d494aa3
 
 ## SimplePulse < PulsedWaveform
 

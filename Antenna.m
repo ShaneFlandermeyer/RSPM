@@ -1,7 +1,11 @@
 % A class representing an antenna. 
 %
+% NOTE FOR PROJECT 2: This class has not been modified since project 1.
+%
 % TODO: Make this an abstract class and implement subclasses for different
-% types of antennas.
+% types of antennas. Right now this is just a rectangular aperture.
+%
+% Blame: Shane Flandermeyer
 
 classdef Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
