@@ -64,7 +64,8 @@ of the targets relative to the radar
 - **pulseTrain(obj):** Returns an LM x 1 pulse train of the waveform parameter object, where L is the number of fast time samples in a PRI and M is the
 number of pulses
 - **pulseMatrix(obj):** Returns an L x M matrix of copies of the waveform parameter object, where L is the number of fast time samples and M is the number of pulses
-- **simulateTargets(obj, targets, data):** Given a list of targets and sampled input data, returns the superposition of all targets' delay, doppler shift and amplitude scaling on the data
+- **simulateTargets(obj, targets, data):** Given a list of targets and sampled input data,  returns the superposition of all targets' delay, doppler shift and amplitude scaling on the data by scaling and shifting on the pulse level
+- **simulateTargetsPulseBurst(obj, targets, data):** Given a list of targets and sampled input data, returns the superposition of all targets' delay, doppler shift and amplitude scaling on the data by scaling and shifting on the sample level
 - **matchedFilterResponse(obj, data):** Returns the matched filter response of the input data, where the matched filter is calculated from the waveform parameter
 - **dopplerProcessing(obj, data, oversampling):** Performs doppler processing on the given input data, where the doppler bins are oversampled by the given oversampling factor
 - **SNR(obj, targets):** Given a list of target objects, returns the SNR for each target (before range-doppler processing, not accounting for the waveform)
