@@ -69,7 +69,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     
     function set.antenna(obj,val)
       if (isa(val,'Antenna'))
-        obj.antenna = val;
+        obj.d_antenna = val;
       else
         error('Must be derived from an Antenna object')
       end

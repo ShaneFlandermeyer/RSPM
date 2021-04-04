@@ -128,7 +128,9 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       if isrow(val) % Make this a column vector
         val = val.';
       end
-      val = val ./ norm(val);
+      if norm(val) ~= 0
+        val = val ./ norm(val);
+      end
       obj.d_position = val;
     end
       
