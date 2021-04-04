@@ -1,20 +1,20 @@
+% A class representing a basic point target. 
+%
+% NOTE FOR PROJECT 2: This has not changed since project 1
+%
+% TODO: 
+%  - Make this class abstract?
+%
+% Blame: Shane Flandermeyer
 classdef Target < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   %% Properties
-  % Private properties
-  properties (Access = private)
-    initial_param; % First parameter updated in updateParams()
-    updated_list = {}; % List of parameters updated due to initial_param
-  end
   % Target properties
   properties (Access = public)
     position = zeros(3,1);        % Target position in XYZ cartesian coordinates (m)
     velocity = zeros(3,1);        % Target velocity in XYZ cartesian coordinates (m/s)
     rcs = 0;                      % Target radar cross section (m^2)
   end % Public properties
-  % Dependent properties
-  properties (Dependent)
-  end % Dependent Properties
   
   %% Setter methods
   methods
@@ -48,6 +48,7 @@ classdef Target < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       
     
   end
+  
   %% Getter methods
   methods
 

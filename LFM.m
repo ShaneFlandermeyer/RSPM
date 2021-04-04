@@ -1,18 +1,14 @@
 % A class representing a linear frequency modulated (LFM) waveform.
-% 
-% PROPERTIES:
-%
-% METHODS:
-% - waveform(): Creates a new LFM with the given parameters
 %
 % TODO:
-% - Allow the user to choose the normalization
 % - Allow the user to specify direction of the frequency sweep
+% 
+% Blame: Shane Flandermeyer
 
 classdef LFM < PulsedWaveform
   properties
-    pulse_width;
-    bandwidth;
+    pulse_width; % Sweep interval (s)
+    bandwidth;   % Sweep bandwidth (Hz)
   end
   
   %% Getters and setters
@@ -21,7 +17,7 @@ classdef LFM < PulsedWaveform
   %% Public methods
   methods (Access = public)
     % Create an LFM waveform with the given bandwidth, sample rate, and
-    % pulse width. This waveform is normalized to have unit energy
+    % pulse width, then normalize accordingly
     function data = waveform(obj)
       samp_interval = 1/obj.samp_rate;
       t = (0:samp_interval:obj.pulse_width-samp_interval)';
