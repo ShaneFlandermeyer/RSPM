@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of RFSystemTest</title>
+  <meta name="keywords" content="RFSystemTest">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003-2019 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">radar-object</a> &gt; <a href="index.html">tests</a> &gt; RFSystemTest.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for radar-object/tests&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>RFSystemTest
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="RFSystemTest.html" class="code" title="">RFSystemTest</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="RFSystemTest.html" class="code" title="">RFSystemTest</a>	</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [radar,targets] = setup(testCase)</a></li><li><a href="#_sub2" class="code">function testReceivedPower(testCase)</a></li><li><a href="#_sub3" class="code">function testSNR(testCase)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 classdef <a href="RFSystemTest.html" class="code" title="">RFSystemTest</a> &lt; matlab.unittest.TestCase
+0002   
+0003   methods(TestClassSetup)
+0004     <a name="_sub0" href="#_subfunctions" class="code">function [radar,targets] = setup(testCase)</a>
+0005       <span class="comment">% Radar System Parameters</span>
+0006       radar = Radar(); <span class="comment">% Define a new radar object</span>
+0007       radar.prf = 2e3;                 <span class="comment">% Pulse repetition frequency (Hz)</span>
+0008       radar.antenna.center_freq = 3e9; <span class="comment">% Center frequency (Hz)</span>
+0009       radar.temperature_noise = 270;   <span class="comment">% Input Noise temperature (k)</span>
+0010       radar.antenna.tx_power = 1e3;    <span class="comment">% Transmit power (W)</span>
+0011       radar.loss_system = 3;           <span class="comment">% System loss (dB)</span>
+0012       radar.noise_fig = 7;             <span class="comment">% Noise figure (dB)</span>
+0013       radar.bandwidth = 5e6;           <span class="comment">% Receiver bandwidth (Hz)</span>
+0014       <span class="comment">% Antenna Parameters</span>
+0015       radar.antenna.width = 1.5;   <span class="comment">% Width of the aperture</span>
+0016       radar.antenna.height = 1.5;  <span class="comment">% Height of the aperture</span>
+0017       radar.antenna.azimuth = 0;   <span class="comment">% Azimuth pointing angle (theta_0)</span>
+0018       radar.antenna.elevation = 0; <span class="comment">% Elevation pointing angle (phi_0)</span>
+0019       <span class="comment">% Target parameters</span>
+0020       num_targets = 3;
+0021       targets(num_targets) = Target();
+0022       targets = targets';
+0023       <span class="comment">% Set each target's position in cartesian coordinates (m)</span>
+0024       targets(1).position = [20000;0;0];
+0025       targets(2).position = [10000;0;0];
+0026       targets(3).position = [10000;10000;10000];
+0027       <span class="comment">% Set each target's velocities in cartesian coordinates (m/s)</span>
+0028       targets(1).velocity = [80;100;400];
+0029       targets(2).velocity = [0,40,40];
+0030       targets(3).velocity = [-40;-40;-40];
+0031       <span class="comment">% Set each target's RCS (m^2)</span>
+0032       targets(1).rcs = 10;
+0033       targets(2).rcs = 10;
+0034       targets(3).rcs = 10;
+0035     <span class="keyword">end</span>
+0036   <span class="keyword">end</span>
+0037   
+0038   methods (Test)
+0039     
+0040     <a name="_sub1" href="#_subfunctions" class="code">function testReceivedPower(testCase)</a>
+0041       [radar,targets] = <a href="#_sub1" class="code" title="subfunction [radar,targets] = setup(testCase)">setup</a>(testCase);
+0042       radar.scale = <span class="string">'linear'</span>;
+0043       <span class="comment">%% Calculate with the radar object</span>
+0044       actual = radar.receivedPower(targets);
+0045       <span class="comment">% Values calculated outside of the object</span>
+0046       expected = [7.950323912178896e-13;1.272051825948623e-11;9.034488617508329e-25];
+0047       testCase.verifyEqual(expected,actual,<span class="string">'AbsTol'</span>,100*eps)
+0048       
+0049       radar.scale = <span class="string">'db'</span>;
+0050       actual = radar.receivedPower(targets);
+0051       expected = 10*log10(expected);
+0052       testCase.verifyEqual(expected,actual,<span class="string">'RelTol'</span>,1e-4)
+0053     <span class="keyword">end</span>
+0054     
+0055     <a name="_sub2" href="#_subfunctions" class="code">function testSNR(testCase)</a>
+0056       [radar,targets] = <a href="#_sub1" class="code" title="subfunction [radar,targets] = setup(testCase)">setup</a>(testCase);
+0057       expected = [8.510740162895264;1.361718426063242e+02;9.671327354406549e-12];
+0058       radar.scale = <span class="string">'linear'</span>;
+0059       actual = radar.SNR(targets);
+0060       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-2)
+0061       radar.scale = <span class="string">'db'</span>;
+0062       actual = radar.SNR(targets);
+0063       expected = 10*log10(expected);
+0064       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0065     <span class="keyword">end</span>
+0066     
+0067   <span class="keyword">end</span>
+0068   
+0069 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 18-Apr-2021 08:45:37 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+</body>
+</html>

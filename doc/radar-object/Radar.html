@@ -1,0 +1,543 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of Radar</title>
+  <meta name="keywords" content="Radar">
+  <meta name="description" content="A class representing a Radar system">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003-2019 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">radar-object</a> &gt; Radar.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for radar-object&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>Radar
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>A class representing a Radar system</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> A class representing a Radar system
+
+ TODO:
+ - Allow the user to create a pulse train with multiple types of waveforms
+ - Add multistatic capabilities
+
+ Blame: Shane Flandermeyer</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="RFSystem.html" class="code" title="">RFSystem</a>	An abstract class representing a notional RF front end.</li><li><a href="Radar.html" class="code" title="">Radar</a>	A class representing a Radar system</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="Radar.html" class="code" title="">Radar</a>	A class representing a Radar system</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function set.num_pulses(obj,val)</a></li><li><a href="#_sub2" class="code">function set.prf(obj,val)</a></li><li><a href="#_sub3" class="code">function set.pri(obj,val)</a></li><li><a href="#_sub4" class="code">function set.waveform(obj,val)</a></li><li><a href="#_sub5" class="code">function set.antenna(obj,val)</a></li><li><a href="#_sub6" class="code">function out = get.range_resolution(obj)</a></li><li><a href="#_sub7" class="code">function out = get.num_pulses(obj)</a></li><li><a href="#_sub8" class="code">function out = get.prf(obj)</a></li><li><a href="#_sub9" class="code">function out = get.pri(obj)</a></li><li><a href="#_sub10" class="code">function out = get.waveform(obj)</a></li><li><a href="#_sub11" class="code">function out = get.antenna(obj)</a></li><li><a href="#_sub12" class="code">function out = get.doppler_unambig(obj)</a></li><li><a href="#_sub13" class="code">function out = get.range_unambig(obj)</a></li><li><a href="#_sub14" class="code">function out = get.velocity_unambig(obj)</a></li><li><a href="#_sub15" class="code">function range = measuredRange(obj,targets)</a></li><li><a href="#_sub16" class="code">function range = trueRange(obj,targets)</a></li><li><a href="#_sub17" class="code">function doppler = measuredDoppler(obj,targets)</a></li><li><a href="#_sub18" class="code">function velocity = measuredVelocity(obj,targets)</a></li><li><a href="#_sub19" class="code">function phase = roundTripPhase(obj,targets)</a></li><li><a href="#_sub20" class="code">function power = receivedPower(obj,targets)</a></li><li><a href="#_sub21" class="code">function pulses = pulseBurstWaveform(obj)</a></li><li><a href="#_sub22" class="code">function mf = pulseBurstMatchedFilter(obj)</a></li><li><a href="#_sub23" class="code">function pulses = pulseMatrix(obj)</a></li><li><a href="#_sub24" class="code">function out = simulateTargets(obj,targets,data)</a></li><li><a href="#_sub25" class="code">function out = simulateTargetsPulseBurst(obj,targets,data)</a></li><li><a href="#_sub26" class="code">function [mf_resp,range_axis] = matchedFilterResponse(obj,data)</a></li><li><a href="#_sub27" class="code">function [rd_map,velocity_axis] = dopplerProcessing(obj,data,oversampling)</a></li><li><a href="#_sub28" class="code">function snr = SNR(obj,targets)</a></li><li><a href="#_sub29" class="code">function out = delaySequence(data,delay)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% A class representing a Radar system</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% TODO:</span>
+0004 <span class="comment">% - Allow the user to create a pulse train with multiple types of waveforms</span>
+0005 <span class="comment">% - Add multistatic capabilities</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Blame: Shane Flandermeyer</span>
+0008 classdef <a href="Radar.html" class="code" title="">Radar</a> &lt; matlab.mixin.Copyable &amp; <a href="RFSystem.html" class="code" title="">RFSystem</a>
+0009   
+0010   <span class="comment">%% Private properties</span>
+0011   properties (Access = private)
+0012     <span class="comment">% List of parameters that should be updated when we change the scale</span>
+0013     <span class="comment">% from linear to dB or vice versa</span>
+0014     power_list = {<span class="string">'loss_system'</span>,<span class="string">'noise_fig'</span>};
+0015   <span class="keyword">end</span>
+0016   
+0017   <span class="comment">% Members exposed to the outside world</span>
+0018   properties (Dependent)
+0019     antenna;          <span class="comment">% Antenna object</span>
+0020     waveform;         <span class="comment">% Waveform object</span>
+0021     prf;              <span class="comment">% Pulse repetition frequency (Hz)</span>
+0022     pri;              <span class="comment">% Pulse repetition interval (s)</span>
+0023     num_pulses;       <span class="comment">% Number of pulses in a CPI</span>
+0024     range_unambig;    <span class="comment">% Unambiguous range (m)</span>
+0025     velocity_unambig; <span class="comment">% Unambiguous velocity (m/s)</span>
+0026     doppler_unambig;  <span class="comment">% Unambiguous doppler frequency (Hz)</span>
+0027     range_resolution; <span class="comment">% Range resolution (m)</span>
+0028   <span class="keyword">end</span>
+0029   
+0030   <span class="comment">% Internal class data</span>
+0031   properties (Access = protected)
+0032     d_antenna;
+0033     d_waveform;
+0034     d_prf;
+0035     d_pri;
+0036     d_num_pulses;
+0037   <span class="keyword">end</span>
+0038 
+0039   
+0040   <span class="comment">%% Setter Methods</span>
+0041   methods
+0042     
+0043     <a name="_sub0" href="#_subfunctions" class="code">function set.num_pulses(obj,val)</a>
+0044       obj.d_num_pulses = val;
+0045     <span class="keyword">end</span>
+0046     
+0047     <a name="_sub1" href="#_subfunctions" class="code">function set.prf(obj,val)</a>
+0048       validateattributes(val,{<span class="string">'numeric'</span>},{<span class="string">'finite'</span>,<span class="string">'nonnan'</span>,<span class="string">'nonnegative'</span>});
+0049       obj.d_prf = val;
+0050       obj.d_pri = 1 / obj.d_prf;
+0051     <span class="keyword">end</span>
+0052     
+0053     <a name="_sub2" href="#_subfunctions" class="code">function set.pri(obj,val)</a>
+0054       validateattributes(val,{<span class="string">'numeric'</span>},{<span class="string">'finite'</span>,<span class="string">'nonnan'</span>,<span class="string">'nonnegative'</span>});
+0055       obj.d_pri = val;
+0056       obj.d_prf = 1 / obj.d_pri;
+0057     <span class="keyword">end</span>
+0058     
+0059     <a name="_sub3" href="#_subfunctions" class="code">function set.waveform(obj,val)</a>
+0060       <span class="keyword">if</span> (isa(val,<span class="string">'Waveform'</span>))
+0061         obj.d_waveform = val;
+0062       <span class="keyword">else</span>
+0063         error(<span class="string">'Must be derived from a Waveform object'</span>)
+0064       <span class="keyword">end</span>
+0065     <span class="keyword">end</span>
+0066     
+0067     <a name="_sub4" href="#_subfunctions" class="code">function set.antenna(obj,val)</a>
+0068       <span class="keyword">if</span> (isa(val,<span class="string">'Antenna'</span>) || isa(val,<span class="string">'AntennaArray'</span>))
+0069         obj.d_antenna = val;
+0070       <span class="keyword">else</span>
+0071         error(<span class="string">'Must be derived from an Antenna or AntennaArray object'</span>)
+0072       <span class="keyword">end</span>
+0073     <span class="keyword">end</span>
+0074         
+0075   <span class="keyword">end</span>
+0076   
+0077   <span class="comment">%% Getter Methods</span>
+0078   methods   
+0079     
+0080     <a name="_sub5" href="#_subfunctions" class="code">function out = get.range_resolution(obj)</a>
+0081       out = obj.const.c/2/obj.bandwidth;
+0082     <span class="keyword">end</span>
+0083     
+0084     <a name="_sub6" href="#_subfunctions" class="code">function out = get.num_pulses(obj)</a>
+0085       out = obj.d_num_pulses;
+0086     <span class="keyword">end</span>
+0087     
+0088     <a name="_sub7" href="#_subfunctions" class="code">function out = get.prf(obj)</a>
+0089       out = obj.d_prf;
+0090     <span class="keyword">end</span>
+0091     
+0092     <a name="_sub8" href="#_subfunctions" class="code">function out = get.pri(obj)</a>
+0093       out = obj.d_pri;
+0094     <span class="keyword">end</span>
+0095     
+0096     <a name="_sub9" href="#_subfunctions" class="code">function out = get.waveform(obj)</a>
+0097       out = obj.d_waveform;
+0098     <span class="keyword">end</span>
+0099     
+0100     <a name="_sub10" href="#_subfunctions" class="code">function out = get.antenna(obj)</a>
+0101       out = obj.d_antenna;
+0102     <span class="keyword">end</span>
+0103     
+0104     <a name="_sub11" href="#_subfunctions" class="code">function out = get.doppler_unambig(obj)</a>
+0105       <span class="comment">% Calculate the unambiguous doppler</span>
+0106       out = obj.prf/2;
+0107     <span class="keyword">end</span>
+0108    
+0109     <a name="_sub12" href="#_subfunctions" class="code">function out = get.range_unambig(obj) </a>
+0110       <span class="comment">% Calculate the unambiguous range</span>
+0111       out = obj.const.c*obj.pri/2;
+0112     <span class="keyword">end</span>
+0113     
+0114     <a name="_sub13" href="#_subfunctions" class="code">function out = get.velocity_unambig(obj)</a>
+0115       <span class="comment">% Calculate the unambiguous velocity</span>
+0116       out = obj.antenna.wavelength*obj.prf/4;
+0117     <span class="keyword">end</span>
+0118   <span class="keyword">end</span>
+0119   
+0120   <span class="comment">%% Public Methods</span>
+0121   methods
+0122     
+0123     <a name="_sub14" href="#_subfunctions" class="code">function range = measuredRange(obj,targets)</a>
+0124       <span class="comment">% For each target in the list, calculate the range measured by the</span>
+0125       <span class="comment">% radar, accounting for range ambiguities;</span>
+0126       range = obj.trueRange(targets);
+0127       <span class="keyword">for</span> ii = 1:length(range)
+0128         <span class="comment">% Get the projection of the position vector onto the mainbeam pointing</span>
+0129         <span class="comment">% vector</span>
+0130         range(ii) = mod(range(ii),obj.range_unambig);
+0131       <span class="keyword">end</span>
+0132     <span class="keyword">end</span> <span class="comment">% measuredRange()</span>
+0133     
+0134     <a name="_sub15" href="#_subfunctions" class="code">function range = trueRange(obj,targets)</a>
+0135       <span class="comment">% For each target in the list, calculate the true range of the target from</span>
+0136       <span class="comment">% the radar</span>
+0137       range = vecnorm([targets(:).position]-obj.antenna.position)';
+0138     <span class="keyword">end</span> <span class="comment">% trueRange()</span>
+0139     
+0140     <a name="_sub16" href="#_subfunctions" class="code">function doppler = measuredDoppler(obj,targets)</a>
+0141       <span class="comment">% Calculate the measured doppler shift of each target in the list,</span>
+0142       <span class="comment">% accounting for ambiguities</span>
+0143       doppler = zeros(numel(targets),1); <span class="comment">% Pre-allocate</span>
+0144       <span class="keyword">for</span> ii = 1:length(doppler)
+0145         <span class="comment">% Calculate the shift that would be measured with no ambiguities.</span>
+0146         <span class="comment">% NOTE: We define negative doppler as moving towards the radar, so there</span>
+0147         <span class="comment">% is a sign change.</span>
+0148         position_vec = targets(ii).position - obj.antenna.position;
+0149         position_vec = position_vec / norm(position_vec);
+0150         true_doppler = -dot(targets(ii).velocity,position_vec)*<span class="keyword">...</span>
+0151           2/obj.antenna.wavelength;
+0152         
+0153         <span class="keyword">if</span> (abs(true_doppler) &lt; obj.prf/2)
+0154           <span class="comment">% Shift can be measured unambiguously, send it straight to the</span>
+0155           <span class="comment">% output</span>
+0156           doppler(ii) = true_doppler;
+0157         <span class="keyword">elseif</span> mod(true_doppler,obj.prf) &lt; obj.prf/2
+0158           <span class="comment">% Aliased doppler is within the measurable range; output it</span>
+0159           aliased_doppler = mod(true_doppler,obj.prf);
+0160           doppler(ii) = aliased_doppler;
+0161         <span class="keyword">elseif</span> mod(true_doppler,obj.prf) &gt; obj.prf/2
+0162           <span class="comment">% Aliased doppler is still ambiguous. Shift it into the measurable</span>
+0163           <span class="comment">% range</span>
+0164           aliased_doppler = mod(true_doppler,obj.prf);
+0165           doppler(ii) = aliased_doppler-obj.prf;
+0166         <span class="keyword">end</span> <span class="comment">% if</span>
+0167       <span class="keyword">end</span> <span class="comment">% for</span>
+0168     <span class="keyword">end</span> <span class="comment">% measuredDoppler()</span>
+0169     
+0170     <a name="_sub17" href="#_subfunctions" class="code">function velocity = measuredVelocity(obj,targets)</a>
+0171       <span class="comment">% Calculate the velocity measured by the radar for each target in the</span>
+0172       <span class="comment">% list. In this case, it's easier to find measured doppler and convert</span>
+0173       <span class="comment">% from there</span>
+0174       
+0175       doppler = obj.measuredDoppler(targets);
+0176       velocity = doppler*obj.antenna.wavelength/2;
+0177       
+0178     <span class="keyword">end</span> <span class="comment">% measuredVelocity()</span>
+0179     
+0180     <a name="_sub18" href="#_subfunctions" class="code">function phase = roundTripPhase(obj,targets)</a>
+0181       
+0182       <span class="comment">% Calculate the constant round-trip phase term for each target in the list</span>
+0183       phase = -4*pi*obj.measuredRange(targets)/obj.antenna.wavelength;
+0184       phase = mod(phase,2*pi);
+0185       
+0186     <span class="keyword">end</span> <span class="comment">% roundTripPhase()</span>
+0187     
+0188     <a name="_sub19" href="#_subfunctions" class="code">function power = receivedPower(obj,targets)</a>
+0189       <span class="comment">% Calculates the received power for the list of targets from the RRE.</span>
+0190       <span class="comment">% For now, assuming monostatic configuration (G_t = G_r)</span>
+0191       
+0192       <span class="comment">% Convert everything to linear for our calculations, but keep track of</span>
+0193       <span class="comment">% whether or not we need to go back to dB</span>
+0194       was_db = false;
+0195       <span class="keyword">if</span> (strcmpi(obj.scale,<span class="string">'db'</span>))
+0196         obj.scale = <span class="string">'linear'</span>;
+0197         was_db = true;
+0198       <span class="keyword">end</span>
+0199       
+0200       <span class="comment">% Get the azimuth and elevation of the targets</span>
+0201       pos_matrix = [targets.position]';
+0202       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
+0203       <span class="comment">% Convert to degree if necessary</span>
+0204       <span class="keyword">if</span> strncmpi(obj.antenna.angle_unit,<span class="string">'Degree'</span>,1)
+0205         az = (180/pi)*az;
+0206         el = (180/pi)*el;
+0207       <span class="keyword">end</span>
+0208       
+0209       <span class="comment">% Get the antenna gain in the azimuth/elevation of the targets. Also</span>
+0210       <span class="comment">% convert to linear units if we're working in dB</span>
+0211       G = obj.antenna.power_gain*obj.antenna.normVoltageGain(az,el).^2;
+0212       <span class="comment">% Get the target ranges as seen by the radar</span>
+0213       ranges = obj.trueRange(targets);
+0214       <span class="comment">% Calculate the power from the RRE for each target</span>
+0215       power = obj.antenna.tx_power*G.^2*obj.antenna.wavelength^2.*<span class="keyword">...</span>
+0216         [targets(:).rcs]'./((4*pi)^3*obj.loss_system*ranges.^4);
+0217       
+0218       <span class="comment">% Convert back to dB if necessary</span>
+0219       <span class="keyword">if</span> was_db
+0220         power = 10*log10(power);
+0221         obj.scale = <span class="string">'db'</span>;
+0222       <span class="keyword">end</span>
+0223     <span class="keyword">end</span> <span class="comment">% receivedPower()</span>
+0224     
+0225     <a name="_sub20" href="#_subfunctions" class="code">function pulses = pulseBurstWaveform(obj)</a>
+0226       <span class="comment">% Returns an LM x 1 pulse train, where L is the number of fast time</span>
+0227       <span class="comment">% samples of the waveform and M is the number of pulses to be</span>
+0228       <span class="comment">% transmitted</span>
+0229       
+0230       <span class="comment">% Pad pulse to the PRI length</span>
+0231       num_zeros = (obj.pri-obj.waveform.pulse_width)*obj.waveform.samp_rate;
+0232       padded_pulse = [obj.waveform.data;zeros(num_zeros,1)];
+0233       <span class="comment">% Stack num_pulses padded pulses on top of each other</span>
+0234       pulses = repmat(padded_pulse,obj.num_pulses,1);
+0235     <span class="keyword">end</span> <span class="comment">% pulseBurstWaveform()</span>
+0236     
+0237     <a name="_sub21" href="#_subfunctions" class="code">function mf = pulseBurstMatchedFilter(obj)</a>
+0238       <span class="comment">% Returns an LM x 1 pulse train containing M copies of the length-L</span>
+0239       <span class="comment">% matched filter vector</span>
+0240       mf = flipud(conj(obj.pulseBurstWaveform()));
+0241     <span class="keyword">end</span> <span class="comment">% pulseBurstMatchedFilter()</span>
+0242     
+0243     <a name="_sub22" href="#_subfunctions" class="code">function pulses = pulseMatrix(obj)</a>
+0244       <span class="comment">% Returns an L x M pulse train, where L is the number of fast time</span>
+0245       <span class="comment">% samples of the waveform and M is the number of pulses to be</span>
+0246       <span class="comment">% transmitted</span>
+0247       
+0248       <span class="comment">% Pad pulse to the PRI length</span>
+0249       num_zeros = (obj.pri-obj.waveform.pulse_width)*obj.waveform.samp_rate;
+0250       padded_pulse = [obj.waveform.data;zeros(round(num_zeros),1)];
+0251       <span class="comment">% Stack num_pulses padded pulses on top of each other</span>
+0252       pulses = repmat(padded_pulse,1,obj.num_pulses);
+0253       
+0254     <span class="keyword">end</span> <span class="comment">% pulseMatrix()</span>
+0255     
+0256     <a name="_sub23" href="#_subfunctions" class="code">function out = simulateTargets(obj,targets,data)</a>
+0257       
+0258       <span class="comment">% Simulate reflections from each target in the list on the given</span>
+0259       <span class="comment">% input data, including a time delay, amplitude scaling, and doppler</span>
+0260       <span class="comment">% shift.</span>
+0261       <span class="comment">%</span>
+0262       <span class="comment">% INPUTS:</span>
+0263       <span class="comment">%  - targets: The list of target objects</span>
+0264       <span class="comment">%  - data: The data in which target responses are injected</span>
+0265       
+0266       <span class="comment">% All calculations should be in linear units, so convert to linear if</span>
+0267       <span class="comment">% in dB</span>
+0268       was_db = false;
+0269       <span class="keyword">if</span> (strcmpi(obj.scale,<span class="string">'db'</span>))
+0270         obj.scale = <span class="string">'linear'</span>;
+0271         was_db = true;
+0272       <span class="keyword">end</span>
+0273       
+0274       <span class="comment">% Simulate the response of each target in the list on the input pulses.</span>
+0275       <span class="comment">% This response includes the range-dependent target delay, the target</span>
+0276       <span class="comment">% amplitude (from the RRE), and the target doppler shift</span>
+0277       
+0278       <span class="comment">% Input is a vector. Reshape to a matrix to do the calculations</span>
+0279       was_vector = false;
+0280       <span class="keyword">if</span> size(data,2) == 1
+0281         data = reshape(data,floor(length(data)/obj.num_pulses),obj.num_pulses);
+0282         was_vector = true;
+0283       <span class="keyword">end</span>
+0284       
+0285       out = zeros(size(data)); <span class="comment">% Pre-allocate the output matrix</span>
+0286       <span class="comment">% Loop through all PRIs in the input data and create a scaled and</span>
+0287       <span class="comment">% shifted copy for each target. The output for each PRI is the</span>
+0288       <span class="comment">% superposition of these pulses</span>
+0289       <span class="keyword">for</span> ii = 1:obj.num_pulses
+0290         <span class="comment">% The true range of each target (used to ensure we don't include</span>
+0291         <span class="comment">% ambiguous target returns before the pulse is actually received</span>
+0292         true_ranges = obj.trueRange(targets);
+0293         <span class="comment">% The range of each target as seen from the radar</span>
+0294         ranges = obj.measuredRange(targets);
+0295         <span class="comment">% The possibly ambiguous sample delays of each target</span>
+0296         delays = (2*ranges/obj.const.c)*obj.waveform.samp_rate;
+0297         <span class="comment">% The doppler shifts and amplitude for each target</span>
+0298         dopp_shifts = exp(1i*2*pi*obj.measuredDoppler(targets)*obj.pri*ii);
+0299         amplitude_scaling = sqrt(obj.receivedPower(targets));
+0300         <span class="keyword">for</span> jj = 1:length(targets)
+0301           <span class="comment">% If we have not been transmitting long enough to see a target, its</span>
+0302           <span class="comment">% return should not be added into the received signal until we have</span>
+0303           <span class="comment">% listened long enough to see it. For example, if a target is at</span>
+0304           <span class="comment">% 1.5*r_unambig, it will not be visible until the second pulse.</span>
+0305           <span class="keyword">if</span> true_ranges(jj) &lt; obj.range_unambig*ii
+0306             <span class="comment">% Delay the sequence</span>
+0307             target_return = Radar.delaySequence(data(:,ii),delays(jj));
+0308             <span class="comment">% Scale the sequence by the RRE and doppler shift it according to</span>
+0309             <span class="comment">% the target doppler</span>
+0310             target_return = target_return*dopp_shifts(jj)*amplitude_scaling(jj);
+0311             <span class="comment">% Add the result to the output of the current pulse</span>
+0312             out(:,ii) = out(:,ii) + target_return;
+0313             
+0314             <span class="comment">% Shift the target to its position for the next PRI</span>
+0315             targets(jj).position = targets(jj).position + <span class="keyword">...</span>
+0316               targets(jj).velocity*obj.pri;
+0317           <span class="keyword">end</span>
+0318         <span class="keyword">end</span>
+0319       <span class="keyword">end</span>
+0320       
+0321       <span class="comment">% Convert back to a column vector if necessary</span>
+0322       <span class="keyword">if</span> was_vector
+0323         out = reshape(out,numel(out),1);
+0324       <span class="keyword">end</span>
+0325       
+0326       <span class="comment">% Convert back to dB if necessary</span>
+0327       <span class="keyword">if</span> was_db
+0328         obj.scale = <span class="string">'db'</span>;
+0329       <span class="keyword">end</span>
+0330       
+0331     <span class="keyword">end</span> <span class="comment">% simulateTargets()</span>
+0332     
+0333     <a name="_sub24" href="#_subfunctions" class="code">function out = simulateTargetsPulseBurst(obj,targets,data)</a>
+0334       <span class="comment">% Simulate the effects of each target in the list on the input pulse burst</span>
+0335       <span class="comment">% waveform. Target effects are applied on a per-sample basis, but the stop</span>
+0336       <span class="comment">% and hop model is assumed so the amplitudes, delays, and doppler shifts</span>
+0337       <span class="comment">% are only calculated once per pulse. This method produces an identical</span>
+0338       <span class="comment">% output as simulateTargets(), but it's about 10x slower so it isn't</span>
+0339       <span class="comment">% actually used in project 2.</span>
+0340       
+0341       was_db = false;
+0342       <span class="keyword">if</span> (strcmpi(obj.scale,<span class="string">'db'</span>))
+0343         obj.scale = <span class="string">'linear'</span>;
+0344         was_db = true;
+0345       <span class="keyword">end</span>
+0346       
+0347       <span class="comment">% Time indices of the start of each pulse</span>
+0348       Tadc = 1/obj.waveform.samp_rate;
+0349       t = (0:Tadc:obj.pri*obj.num_pulses-Tadc)';
+0350       pri_length = obj.pri*obj.waveform.samp_rate;
+0351       out = zeros(size(data));
+0352       <span class="comment">% Get the shifted returns for each target then sum them together</span>
+0353       measured_range = 0;
+0354       delay = 0;
+0355       dopp_shift = 0;
+0356       amplitude = 0;
+0357       <span class="keyword">for</span> ii = 1:length(targets)
+0358         <span class="keyword">for</span> jj = 1:numel(data)
+0359           <span class="comment">% Calculate new target parameters ONLY on the first sample of each new</span>
+0360           <span class="comment">% pulse (stop and hop assumption)</span>
+0361           <span class="keyword">if</span> (jj == 1 || ~mod(jj,pri_length))
+0362             measured_range = obj.measuredRange(targets(ii));
+0363             delay = round((2*measured_range/obj.const.c)*obj.waveform.samp_rate);
+0364             dopp_shift = exp(1i*2*pi*obj.trueDoppler(targets(ii))*t(jj));
+0365             amplitude = sqrt(obj.receivedPower(targets(ii)));
+0366           <span class="keyword">end</span>
+0367           <span class="comment">% Scale and shift each sample according to the above calculations</span>
+0368           <span class="keyword">if</span> jj &gt; delay
+0369             out(jj) = out(jj) + data(jj-delay)*amplitude*dopp_shift;
+0370           <span class="keyword">end</span>
+0371         <span class="keyword">end</span>
+0372       <span class="keyword">end</span>
+0373       
+0374       <span class="comment">% Convert back to dB if necessary</span>
+0375       <span class="keyword">if</span> was_db
+0376         obj.scale = <span class="string">'db'</span>;
+0377       <span class="keyword">end</span>
+0378     <span class="keyword">end</span> <span class="comment">% simulateTargetsPulseBurst()</span>
+0379     
+0380     <a name="_sub25" href="#_subfunctions" class="code">function [mf_resp,range_axis] = matchedFilterResponse(obj,data)</a>
+0381       
+0382       <span class="comment">% Calculate the matched filter response of the given input data using</span>
+0383       <span class="comment">% the waveform object associated with the radar</span>
+0384       <span class="comment">%</span>
+0385       <span class="comment">% INPUTS:</span>
+0386       <span class="comment">%  - data: The fast time data to be filtered. This can be either an</span>
+0387       <span class="comment">%          LM x 1 pulse train or an L x M matrix, where L is the</span>
+0388       <span class="comment">%          number of fast time samples and M is the number of pulses.</span>
+0389       <span class="comment">%</span>
+0390       <span class="comment">% OUTPUTS:</span>
+0391       <span class="comment">%  - mf_resp: The calculated matched filter response</span>
+0392       <span class="comment">%  - range_axis: The ranges corresponding to each delay in the</span>
+0393       <span class="comment">%                matched filter output</span>
+0394       
+0395       <span class="comment">% Input is a vector. Reshape to a matrix to do the calculations</span>
+0396       <span class="keyword">if</span> size(data,2) == 1
+0397         data = reshape(data,floor(length(data)/obj.num_pulses),obj.num_pulses);
+0398       <span class="keyword">end</span>
+0399       
+0400       mf_length = size(obj.waveform.data,1)+size(data,1)-1;
+0401       <span class="comment">% Pad the matched filter and data vector (or matrix) to the size of</span>
+0402       <span class="comment">% the matched filter output</span>
+0403       waveform_norm = obj.waveform.data ./ norm(obj.waveform.data);
+0404       mf = [flipud(conj(waveform_norm));<span class="keyword">...</span>
+0405         zeros(mf_length-size(waveform_norm,1),1)];
+0406       data = [data;zeros(mf_length-size(data,1),size(data,2))];
+0407       <span class="comment">% Calculate the matched filter output in the frequency domain</span>
+0408       mf_resp = zeros(size(data));
+0409       <span class="keyword">for</span> ii = 1:size(data,2)
+0410         mf_resp(:,ii) = ifft(fft(data(:,ii)).*fft(mf));
+0411       <span class="keyword">end</span>
+0412       <span class="comment">% Calculate the corresponding range axis for the matched filter</span>
+0413       <span class="comment">% response, where range 0 corresponds to a sample delay equal to the</span>
+0414       <span class="comment">% length of the transmitted waveform</span>
+0415       idx = (1:size(mf_resp,1))';
+0416       time_axis = (idx-length(obj.waveform.data))/obj.waveform.samp_rate;
+0417       range_axis = time_axis*(obj.const.c/2);
+0418       
+0419     <span class="keyword">end</span> <span class="comment">% matchedFilterResponse()</span>
+0420     
+0421     <a name="_sub26" href="#_subfunctions" class="code">function [rd_map,velocity_axis] = dopplerProcessing(obj,data,oversampling)</a>
+0422       
+0423       <span class="comment">% Perform doppler processing on the matched filtered data</span>
+0424       <span class="comment">%</span>
+0425       <span class="comment">% INPUTS:</span>
+0426       <span class="comment">%  - data: A P x M matrix of matched filter vectors, where P is the</span>
+0427       <span class="comment">%          length of the matched filter output and M is the number of</span>
+0428       <span class="comment">%          pulses.</span>
+0429       <span class="comment">%  - oversampling: The doppler oversampling rate</span>
+0430       <span class="comment">%</span>
+0431       <span class="comment">% OUTPUTS:</span>
+0432       <span class="comment">%  - rd_map: The range doppler map</span>
+0433       <span class="comment">%  - velocity_axis: The velocity values of each doppler bin</span>
+0434       
+0435       narginchk(2,3);
+0436       <span class="comment">% Set default arguments</span>
+0437       <span class="keyword">if</span> (nargin == 2)
+0438         oversampling = 1;
+0439       <span class="keyword">end</span>
+0440       
+0441       <span class="comment">% Input is a vector. Reshape to a matrix to do the calculations</span>
+0442       <span class="keyword">if</span> size(data,2) == 1
+0443         data = reshape(data,floor(length(data)/obj.num_pulses),obj.num_pulses);
+0444       <span class="keyword">end</span>
+0445       <span class="comment">% Perform doppler processing over all the pulses</span>
+0446       rd_map = fftshift(fft(data,obj.num_pulses*oversampling,2),2);
+0447       <span class="comment">% Create the doppler axis for the range-doppler map</span>
+0448       velocity_step = 2*obj.velocity_unambig/obj.num_pulses;
+0449       velocity_axis = (-obj.velocity_unambig:velocity_step:<span class="keyword">...</span>
+0450         obj.velocity_unambig-velocity_step)';
+0451       
+0452     <span class="keyword">end</span> <span class="comment">% dopplerProcessing()</span>
+0453     
+0454     <a name="_sub27" href="#_subfunctions" class="code">function snr = SNR(obj,targets)</a>
+0455       <span class="comment">% Compute the SNR for each target in the input list</span>
+0456       <span class="keyword">if</span> (strcmpi(obj.scale,<span class="string">'db'</span>))
+0457         snr = obj.receivedPower(targets) - obj.power_noise;
+0458       <span class="keyword">else</span>
+0459         snr = obj.receivedPower(targets) / obj.power_noise;
+0460       <span class="keyword">end</span>
+0461     <span class="keyword">end</span>
+0462   <span class="keyword">end</span>
+0463   
+0464   <span class="comment">%% Static Methods</span>
+0465   methods (Static)
+0466     
+0467     <a name="_sub28" href="#_subfunctions" class="code">function out = delaySequence(data,delay)</a>
+0468       <span class="comment">% Delay the input vector by the given delay</span>
+0469       <span class="comment">% INPUTS:</span>
+0470       <span class="comment">%  - data: The data to be delayed</span>
+0471       <span class="comment">%  - delay: The number of samples to delay the data</span>
+0472       <span class="comment">%</span>
+0473       <span class="comment">% OUTPUT: The delayed sequence</span>
+0474       delay = round(delay); <span class="comment">% Only consider integer sample delays</span>
+0475       delayed_seq_len = size(data,1)+max(0,delay);
+0476       out = zeros(delayed_seq_len,1);
+0477       <span class="comment">% Insert the data after the given number of delay samples</span>
+0478       tmp = data;
+0479       out(1+delay:delayed_seq_len) = tmp;
+0480       <span class="comment">% Keep the output sequence the same size as the input. All data</span>
+0481       <span class="comment">% delayed past the original sequence is truncated.</span>
+0482       out = out(1:length(data),:);
+0483       
+0484     <span class="keyword">end</span>
+0485     
+0486   <span class="keyword">end</span>
+0487   
+0488 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 18-Apr-2021 08:45:37 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+</body>
+</html>

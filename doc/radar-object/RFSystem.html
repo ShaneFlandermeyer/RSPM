@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of RFSystem</title>
+  <meta name="keywords" content="RFSystem">
+  <meta name="description" content="An abstract class representing a notional RF front end.">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003-2019 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">radar-object</a> &gt; RFSystem.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for radar-object&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>RFSystem
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>An abstract class representing a notional RF front end.</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment"> An abstract class representing a notional RF front end.
+
+ Blame: Shane Flandermeyer</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="RFSystem.html" class="code" title="">RFSystem</a>	An abstract class representing a notional RF front end.</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="RFSystem.html" class="code" title="">RFSystem</a>	An abstract class representing a notional RF front end.</li><li><a href="Radar.html" class="code" title="">Radar</a>	A class representing a Radar system</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function set.position(obj,val)</a></li><li><a href="#_sub2" class="code">function set.velocity(obj,val)</a></li><li><a href="#_sub3" class="code">function set.center_freq(obj,val)</a></li><li><a href="#_sub4" class="code">function set.wavelength(obj,val)</a></li><li><a href="#_sub5" class="code">function set.noise_fig(obj,val)</a></li><li><a href="#_sub6" class="code">function set.loss_system(obj,val)</a></li><li><a href="#_sub7" class="code">function set.scale(obj,val)</a></li><li><a href="#_sub8" class="code">function set.temperature_noise(obj,val)</a></li><li><a href="#_sub9" class="code">function set.bandwidth(obj,val)</a></li><li><a href="#_sub10" class="code">function out = get.position(obj)</a></li><li><a href="#_sub11" class="code">function out = get.velocity(obj)</a></li><li><a href="#_sub12" class="code">function out = get.center_freq(obj)</a></li><li><a href="#_sub13" class="code">function out = get.wavelength(obj)</a></li><li><a href="#_sub14" class="code">function power = get.power_noise(obj)</a></li><li><a href="#_sub15" class="code">function out = get.bandwidth(obj)</a></li><li><a href="#_sub16" class="code">function out = get.scale(obj)</a></li><li><a href="#_sub17" class="code">function out = get.temperature_noise(obj)</a></li><li><a href="#_sub18" class="code">function out = get.loss_system(obj)</a></li><li><a href="#_sub19" class="code">function out = get.noise_fig(obj)</a></li><li><a href="#_sub20" class="code">function out = addThermalNoise(obj,data)</a></li><li><a href="#_sub21" class="code">function convertTodB(obj)</a></li><li><a href="#_sub22" class="code">function convertToLinear(obj)</a></li><li><a href="#_sub23" class="code">function value = properties( obj )</a></li><li><a href="#_sub24" class="code">function value = fieldnames( obj )</a></li><li><a href="#_sub25" class="code">function group = getPropertyGroups( obj )</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">% An abstract class representing a notional RF front end.</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% Blame: Shane Flandermeyer</span>
+0004 
+0005 classdef (Abstract) <a href="RFSystem.html" class="code" title="">RFSystem</a> &lt; matlab.mixin.Copyable &amp; matlab.mixin.CustomDisplay
+0006   <span class="comment">%% Properties</span>
+0007   
+0008   <span class="comment">% Constants</span>
+0009   <a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a> (Constant = true, Access = protected)
+0010     const = struct(<span class="string">'c'</span>,299792458,<span class="string">'k'</span>,1.38064852e-23,<span class="string">'T0_k'</span>,290)
+0011   <span class="keyword">end</span>
+0012   
+0013   <span class="comment">% Private properties</span>
+0014   <a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a> (Access = private)
+0015     <span class="comment">% List of parameters that should be updated when we change the scale</span>
+0016     <span class="comment">% from linear to dB or vice versa</span>
+0017     power_quantities = {<span class="string">'loss_system'</span>,<span class="string">'noise_fig'</span>};
+0018     voltage_quantities = {};
+0019   <span class="keyword">end</span>
+0020   
+0021   <span class="comment">% Class members exposed to the outside world</span>
+0022   <a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a> (Dependent)
+0023     power_noise;       <span class="comment">% Noise power</span>
+0024     scale;             <span class="comment">% Specifies if the units are linear or in dB</span>
+0025     loss_system;       <span class="comment">% System loss factor</span>
+0026     noise_fig;         <span class="comment">% System noise figure</span>
+0027     temperature_noise; <span class="comment">% Temperature for noise calculations</span>
+0028     bandwidth;         <span class="comment">% Receiver bandwidth (at complex baseband = the samp rate)</span>
+0029     center_freq;       <span class="comment">% Operating frequency (Hz)</span>
+0030     wavelength;        <span class="comment">% Operating wavelength (m)</span>
+0031     position;          <span class="comment">% System position</span>
+0032     velocity;          <span class="comment">% System velocity (m/s)</span>
+0033   <span class="keyword">end</span>
+0034   
+0035   <span class="comment">% Internally stored class members</span>
+0036   <a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a> (Access = protected)
+0037   <span class="keyword">end</span>
+0038   
+0039   <span class="comment">% Internally stored class members</span>
+0040   <a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a> (Access = private)
+0041     d_scale = <span class="string">'dB'</span>;
+0042     d_loss_system;
+0043     d_noise_fig;
+0044     d_temperature_noise;
+0045     d_bandwidth;
+0046     d_center_freq;
+0047     d_wavelength;
+0048     d_position;
+0049     d_velocity;
+0050   <span class="keyword">end</span>
+0051   
+0052   <span class="comment">%% Setter Methods</span>
+0053   methods
+0054     
+0055     <a name="_sub0" href="#_subfunctions" class="code">function set.position(obj,val)</a>
+0056       obj.d_position = val;
+0057     <span class="keyword">end</span>
+0058     
+0059     <a name="_sub1" href="#_subfunctions" class="code">function set.velocity(obj,val)</a>
+0060       obj.d_velocity = val;
+0061     <span class="keyword">end</span>
+0062     
+0063     <a name="_sub2" href="#_subfunctions" class="code">function set.center_freq(obj,val)</a>
+0064       validateattributes(val,{<span class="string">'numeric'</span>},{<span class="string">'finite'</span>,<span class="string">'nonnan'</span>,<span class="string">'nonnegative'</span>});
+0065       obj.d_center_freq = val;
+0066       obj.d_wavelength = obj.const.c/val;
+0067       <span class="keyword">if</span> isprop(obj,<span class="string">'antenna'</span>) &amp;&amp; ~isempty(obj.antenna)
+0068         obj.antenna.center_freq = val;
+0069       <span class="keyword">end</span>
+0070     <span class="keyword">end</span>
+0071     
+0072     <a name="_sub3" href="#_subfunctions" class="code">function set.wavelength(obj,val)</a>
+0073       validateattributes(val,{<span class="string">'numeric'</span>},{<span class="string">'finite'</span>,<span class="string">'nonnan'</span>,<span class="string">'nonnegative'</span>});
+0074       obj.d_wavelength = val;
+0075       obj.d_center_freq = obj.const.c/val;
+0076       <span class="keyword">if</span> (isprop(obj,<span class="string">'antenna'</span>)) &amp;&amp; ~isempty(obj.antenna)
+0077         obj.antenna.wavelength = val;
+0078       <span class="keyword">end</span>
+0079     <span class="keyword">end</span>
+0080 
+0081     <a name="_sub4" href="#_subfunctions" class="code">function set.noise_fig(obj,val)</a>
+0082       obj.d_noise_fig = val;
+0083     <span class="keyword">end</span>
+0084 
+0085     <a name="_sub5" href="#_subfunctions" class="code">function set.loss_system(obj,val)</a>
+0086       validateattributes(val,{<span class="string">'numeric'</span>},{<span class="string">'finite'</span>,<span class="string">'nonnan'</span>,<span class="string">'nonnegative'</span>});
+0087       obj.d_loss_system = val;
+0088     <span class="keyword">end</span>
+0089    
+0090     <a name="_sub6" href="#_subfunctions" class="code">function set.scale(obj,val)</a>
+0091       validateattributes(val,{<span class="string">'string'</span>,<span class="string">'char'</span>},{});
+0092       <span class="keyword">if</span> strncmpi(val,<span class="string">'Linear'</span>,1)
+0093         obj.d_scale = <span class="string">'Linear'</span>;
+0094         obj.convertToLinear();
+0095       <span class="keyword">elseif</span> strncmpi(val,<span class="string">'dB'</span>,1)
+0096         obj.d_scale = <span class="string">'dB'</span>;
+0097         obj.convertTodB();
+0098       <span class="keyword">end</span>
+0099       <span class="comment">% Change sub-objects to linear units if any exist</span>
+0100       props = <a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a>(obj);
+0101       <span class="keyword">for</span> ii = 1:length(props)
+0102         <span class="keyword">if</span> isobject(obj.(props{ii})) &amp;&amp; isprop(obj.(props{ii}),<span class="string">'scale'</span>)
+0103           obj.(props{ii}).scale = val;
+0104         <span class="keyword">end</span>
+0105       <span class="keyword">end</span>
+0106     <span class="keyword">end</span>
+0107  
+0108     <a name="_sub7" href="#_subfunctions" class="code">function set.temperature_noise(obj,val)</a>
+0109       validateattributes(val,{<span class="string">'numeric'</span>},{<span class="string">'finite'</span>,<span class="string">'nonnan'</span>,<span class="string">'nonnegative'</span>});
+0110       obj.d_temperature_noise = val;
+0111     <span class="keyword">end</span>
+0112    
+0113     <a name="_sub8" href="#_subfunctions" class="code">function set.bandwidth(obj,val)</a>
+0114       obj.d_bandwidth = val;
+0115       <span class="keyword">if</span> isprop(obj,<span class="string">'waveform'</span>) &amp;&amp; ~isempty(obj.waveform)
+0116         obj.waveform.samp_rate = val;
+0117       <span class="keyword">end</span>
+0118     <span class="keyword">end</span>
+0119     
+0120   <span class="keyword">end</span>
+0121   <span class="comment">%% Getter methods</span>
+0122   methods
+0123     
+0124     <a name="_sub9" href="#_subfunctions" class="code">function out = get.position(obj)</a>
+0125       out = obj.d_position;
+0126     <span class="keyword">end</span>
+0127     
+0128     <a name="_sub10" href="#_subfunctions" class="code">function out = get.velocity(obj)</a>
+0129       out = obj.d_velocity;
+0130     <span class="keyword">end</span>
+0131     
+0132     <a name="_sub11" href="#_subfunctions" class="code">function out = get.center_freq(obj)</a>
+0133       out = obj.d_center_freq;
+0134     <span class="keyword">end</span>
+0135     
+0136     <a name="_sub12" href="#_subfunctions" class="code">function out = get.wavelength(obj)</a>
+0137       out = obj.d_wavelength;
+0138     <span class="keyword">end</span>
+0139     
+0140     <a name="_sub13" href="#_subfunctions" class="code">function power = get.power_noise(obj)</a>
+0141       <span class="keyword">if</span> (strcmpi(obj.scale,<span class="string">'db'</span>))
+0142         obj.convertToLinear();
+0143       <span class="keyword">end</span>
+0144       power = obj.const.k*obj.temperature_noise*obj.bandwidth*obj.noise_fig;
+0145       <span class="comment">% Conversion to dB</span>
+0146       <span class="keyword">if</span> (strcmpi(obj.scale,<span class="string">'db'</span>))
+0147         power = 10*log10(power);
+0148         obj.convertTodB();
+0149       <span class="keyword">end</span>
+0150     <span class="keyword">end</span>
+0151     
+0152     <a name="_sub14" href="#_subfunctions" class="code">function out = get.bandwidth(obj)</a>
+0153       <span class="keyword">if</span> isprop(obj,<span class="string">'waveform'</span>) &amp;&amp; isempty(obj.d_bandwidth)
+0154         out = obj.waveform.samp_rate;
+0155       <span class="keyword">else</span>
+0156         out = obj.d_bandwidth;
+0157         
+0158       <span class="keyword">end</span>
+0159     <span class="keyword">end</span>
+0160     
+0161     <a name="_sub15" href="#_subfunctions" class="code">function out = get.scale(obj)</a>
+0162       out = obj.d_scale;
+0163     <span class="keyword">end</span>
+0164     
+0165     <a name="_sub16" href="#_subfunctions" class="code">function out = get.temperature_noise(obj)</a>
+0166       out = obj.d_temperature_noise;
+0167     <span class="keyword">end</span>
+0168     
+0169     <a name="_sub17" href="#_subfunctions" class="code">function out = get.loss_system(obj)</a>
+0170       out = obj.d_loss_system;
+0171     <span class="keyword">end</span>
+0172     
+0173     <a name="_sub18" href="#_subfunctions" class="code">function out = get.noise_fig(obj)</a>
+0174       out = obj.d_noise_fig;
+0175     <span class="keyword">end</span>
+0176     
+0177   <span class="keyword">end</span>
+0178   
+0179   <span class="comment">%% Public Methods</span>
+0180   methods (Access = public)
+0181     
+0182     <a name="_sub19" href="#_subfunctions" class="code">function out = addThermalNoise(obj,data)</a>
+0183       <span class="comment">% Adds thermal noise to the given data based on the noise power for the</span>
+0184       <span class="comment">% system.</span>
+0185       <span class="comment">%</span>
+0186       <span class="comment">% INPUTS:</span>
+0187       <span class="comment">%  - data: The data that the noise should be added to. There are no shape</span>
+0188       <span class="comment">%          requirements for this input</span>
+0189       <span class="comment">% OUTPUT: The noisy data</span>
+0190       <span class="keyword">if</span> (strcmpi(obj.scale,<span class="string">'db'</span>))
+0191         power = 10^(obj.power_noise/10);
+0192       <span class="keyword">else</span>
+0193         power = obj.power_noise;
+0194       <span class="keyword">end</span>
+0195       noise = (randn(size(data)) + 1i*randn(size(data)))*sqrt(power/2);
+0196       out = data + noise;
+0197     <span class="keyword">end</span>
+0198     
+0199   <span class="keyword">end</span> <span class="comment">% Public methods</span>
+0200   <span class="comment">%% Private Methods</span>
+0201   methods
+0202     
+0203     <span class="comment">% Convert all parameters that are currently in linear units to dB</span>
+0204     <a name="_sub20" href="#_subfunctions" class="code">function convertTodB(obj)</a>
+0205       <span class="keyword">for</span> ii = 1:numel(obj.power_quantities)
+0206         obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
+0207       <span class="keyword">end</span>
+0208       <span class="keyword">for</span> ii = 1:numel(obj.voltage_quantities)
+0209         obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
+0210       <span class="keyword">end</span>
+0211     <span class="keyword">end</span>
+0212     
+0213     <span class="comment">% Convert all parameters that are currently in dB to linear units</span>
+0214     <a name="_sub21" href="#_subfunctions" class="code">function convertToLinear(obj)</a>
+0215       
+0216       <span class="keyword">for</span> ii = 1:numel(obj.power_quantities)
+0217         obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
+0218       <span class="keyword">end</span>
+0219       
+0220       <span class="keyword">for</span> ii = 1:numel(obj.voltage_quantities)
+0221         obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
+0222       <span class="keyword">end</span>
+0223       
+0224     <span class="keyword">end</span>
+0225     
+0226   <span class="keyword">end</span> <span class="comment">% Private methods</span>
+0227   
+0228   <span class="comment">%% Hidden Methods (DO NOT EDIT THESE)</span>
+0229   methods (Hidden)
+0230     
+0231     <a name="_sub22" href="#_subfunctions" class="code">function value = properties( obj )</a>
+0232       <span class="comment">% Put the properties list in sorted order</span>
+0233       propList = sort( builtin(&quot;<a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a>&quot;, obj) );
+0234       <span class="comment">% Move any control switch parameters to the top of the output</span>
+0235       switches = {<span class="string">'scale'</span>, <span class="string">'const'</span>}';
+0236       propList(ismember(propList,switches)) = [];
+0237       propList = cat(1,switches,propList);
+0238       <span class="keyword">if</span> nargout == 0
+0239         disp(propList);
+0240       <span class="keyword">else</span>
+0241         value = propList;
+0242       <span class="keyword">end</span>
+0243     <span class="keyword">end</span>
+0244     
+0245     <a name="_sub23" href="#_subfunctions" class="code">function value = fieldnames( obj )</a>
+0246       value = sort( builtin( &quot;<a href="#_sub24" class="code" title="subfunction value = fieldnames( obj )">fieldnames</a>&quot;, obj ) );
+0247     <span class="keyword">end</span>
+0248   <span class="keyword">end</span>
+0249   
+0250   methods (Access = protected)
+0251     
+0252     <a name="_sub24" href="#_subfunctions" class="code">function group = getPropertyGroups( obj )</a>
+0253       props = <a href="#_sub23" class="code" title="subfunction value = properties( obj )">properties</a>( obj );
+0254       group = matlab.mixin.util.PropertyGroup( props );
+0255     <span class="keyword">end</span>
+0256     
+0257   <span class="keyword">end</span>
+0258 <span class="keyword">end</span> <span class="comment">% class</span></pre></div>
+<hr><address>Generated on Sun 18-Apr-2021 08:45:37 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+</body>
+</html>
