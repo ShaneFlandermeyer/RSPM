@@ -1,0 +1,2 @@
+classdef LinearArray < AntennaArray
+end

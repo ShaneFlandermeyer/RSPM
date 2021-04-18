@@ -6,7 +6,7 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   %% Properties
   
   % Constants
-  properties (Constant = true, Access = private)
+  properties (Constant = true, Access = protected)
     const = struct('c',299792458,'k',1.38064852e-23,'T0_k',290)
   end
   
@@ -26,8 +26,10 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     noise_fig;         % System noise figure
     temperature_noise; % Temperature for noise calculations
     bandwidth;         % Receiver bandwidth (at complex baseband = the samp rate)
-    center_freq;
-    wavelength;
+    center_freq;       % Operating frequency (Hz)
+    wavelength;        % Operating wavelength (m)
+    position;          % System position
+    velocity;          % System velocity (m/s)
   end
   
   % Internally stored class members
@@ -43,15 +45,37 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     d_bandwidth;
     d_center_freq;
     d_wavelength;
+    d_position;
+    d_velocity;
   end
   
   %% Setter Methods
   methods
     
+    function set.position(obj,val)
+      obj.d_position = val;
+    end
+    
+    function set.velocity(obj,val)
+      obj.d_velocity = val;
+    end
+    
     function set.center_freq(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_center_freq = val;
       obj.d_wavelength = obj.const.c/val;
+      if isprop(obj,'antenna') && ~isempty(obj.antenna)
+        obj.antenna.center_freq = val;
+      end
+    end
+    
+    function set.wavelength(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.d_wavelength = val;
+      obj.d_center_freq = obj.const.c/val;
+      if (isprop(obj,'antenna')) && ~isempty(obj.antenna)
+        obj.antenna.wavelength = val;
+      end
     end
 
     function set.noise_fig(obj,val)
@@ -96,6 +120,14 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   end
   %% Getter methods
   methods
+    
+    function out = get.position(obj)
+      out = obj.d_position;
+    end
+    
+    function out = get.velocity(obj)
+      out = obj.d_velocity;
+    end
     
     function out = get.center_freq(obj)
       out = obj.d_center_freq;

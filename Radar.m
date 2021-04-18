@@ -6,10 +6,6 @@
 %
 % Blame: Shane Flandermeyer
 classdef Radar < matlab.mixin.Copyable & RFSystem
-  %% Physical constants
-  properties (Constant = true)
-    const = struct('c',299792458,'k',1.38064852e-23,'T0_k',290)
-  end
   
   %% Private properties
   properties (Access = private)
@@ -27,7 +23,8 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     num_pulses;       % Number of pulses in a CPI
     range_unambig;    % Unambiguous range (m)
     velocity_unambig; % Unambiguous velocity (m/s)
-    doppler_unambig;  % Unambiguous doppler frequency(Hz)
+    doppler_unambig;  % Unambiguous doppler frequency (Hz)
+    range_resolution; % Range resolution (m)
   end
   
   % Internal class data
@@ -79,6 +76,10 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   
   %% Getter Methods
   methods   
+    
+    function out = get.range_resolution(obj)
+      out = obj.const.c/2/obj.bandwidth;
+    end
     
     function out = get.num_pulses(obj)
       out = obj.d_num_pulses;

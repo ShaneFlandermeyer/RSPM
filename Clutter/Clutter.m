@@ -1,6 +1,9 @@
 % Abstract Class representing clutter
 classdef (Abstract) Clutter < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
+  properties (Constant = true,Access = protected)
+    const = struct('Re',6370000,'ae',(4/3)*6370000);
+  end
   %% Hidden Methods (DO NOT EDIT THESE)
   methods (Hidden)
     % Sort the object properties alphabetically
