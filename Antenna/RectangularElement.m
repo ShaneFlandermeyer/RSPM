@@ -1,6 +1,6 @@
 % A class representing a rectangular aperture antenna
 
-classdef RectangularAperture < Antenna
+classdef RectangularElement < Antenna
   
   
   % Public API

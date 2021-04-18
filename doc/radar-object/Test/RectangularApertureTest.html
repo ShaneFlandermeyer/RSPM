@@ -1,0 +1,216 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of RectangularApertureTest</title>
+  <meta name="keywords" content="RectangularApertureTest">
+  <meta name="description" content="">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003-2019 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../../index.html">Home</a> &gt;  <a href="../index.html">radar-object</a> &gt; <a href="index.html">Test</a> &gt; RectangularApertureTest.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../../index.html"><img alt="<" border="0" src="../../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for radar-object/Test&nbsp;<img alt=">" border="0" src="../../right.png"></a></td></tr></table>-->
+
+<h1>RectangularApertureTest
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong></strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre class="comment"></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="RectangularApertureTest.html" class="code" title="">RectangularApertureTest</a>	</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="RectangularApertureTest.html" class="code" title="">RectangularApertureTest</a>	</li></ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<ul style="list-style-image:url(../../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function setupAntenna(testCase)</a></li><li><a href="#_sub2" class="code">function setupTargets(testCase)</a></li><li><a href="#_sub3" class="code">function testArea(testCase)</a></li><li><a href="#_sub4" class="code">function testBeamwidthAz3dB(testCase)</a></li><li><a href="#_sub5" class="code">function testBeamwidthEl3dB(testCase)</a></li><li><a href="#_sub6" class="code">function testPowerGain(testCase)</a></li><li><a href="#_sub7" class="code">function testnormVoltageGain(testCase)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
+<div class="fragment"><pre>0001 classdef <a href="RectangularApertureTest.html" class="code" title="">RectangularApertureTest</a> &lt; matlab.unittest.TestCase
+0002   
+0003   <span class="comment">%% Parameter Setup</span>
+0004   properties
+0005     antenna = RectangularAperture();
+0006     targets = Target();
+0007   <span class="keyword">end</span>
+0008   
+0009   methods (TestMethodSetup)
+0010     <a name="_sub0" href="#_subfunctions" class="code">function setupAntenna(testCase)</a>
+0011       <span class="comment">% Set up the Antenna object</span>
+0012       testCase.antenna = RectangularAperture;
+0013       testCase.addTeardown(@RectangularAperture)
+0014       testCase.antenna.center_freq = 3e9;
+0015       testCase.antenna.height = 1.5;
+0016       testCase.antenna.width = 1.5;
+0017       testCase.antenna.mainbeam_direction = [1;0;0];
+0018       testCase.antenna.position = [0;0;0];
+0019     <span class="keyword">end</span>
+0020     
+0021     <a name="_sub1" href="#_subfunctions" class="code">function setupTargets(testCase)</a>
+0022       <span class="comment">% Set up array of target objects</span>
+0023       num_targets = 3;
+0024       testCase.targets(3,1) = Target();
+0025       <span class="keyword">for</span> ii = 1:num_targets
+0026         testCase.targets(ii) = Target();
+0027       <span class="keyword">end</span>
+0028       testCase.targets = testCase.targets';
+0029       <span class="comment">% Set each target's position in cartesian coordinates (m)</span>
+0030       testCase.targets(1).position = [20000;0;0];
+0031       testCase.targets(2).position = [10000;0;0];
+0032       testCase.targets(3).position = [10000;10000;10000];
+0033       <span class="comment">% Set each target's velocities in cartesian coordinates (m/s)</span>
+0034       testCase.targets(1).velocity = [80;100;400];
+0035       testCase.targets(2).velocity = [0,40,40];
+0036       testCase.targets(3).velocity = [-40;-40;-40];
+0037       <span class="comment">% Set each target's RCS (m^2)</span>
+0038       testCase.targets(1).rcs = 10;
+0039       testCase.targets(2).rcs = 10;
+0040       testCase.targets(3).rcs = 10;
+0041     <span class="keyword">end</span>
+0042   <span class="keyword">end</span>
+0043   
+0044   <span class="comment">%% Tests</span>
+0045   methods (Test)
+0046     
+0047     <a name="_sub2" href="#_subfunctions" class="code">function testArea(testCase)</a>
+0048       <span class="comment">% Test aperture area calculation</span>
+0049       expected = 2.25;
+0050       actual = testCase.antenna.area;
+0051       testCase.verifyEqual(actual,expected)
+0052     <span class="keyword">end</span>
+0053     
+0054     <a name="_sub3" href="#_subfunctions" class="code">function testBeamwidthAz3dB(testCase)</a>
+0055       <span class="comment">% Test azimuth 3db beamwidth calculation</span>
+0056       
+0057       <span class="comment">% Radian mode</span>
+0058       <span class="comment">% -----------------------------------------------------------------</span>
+0059       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0060       expected = 0.0593;
+0061       actual = testCase.antenna.beamwidth_azimuth_3db;
+0062       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0063       
+0064       <span class="comment">% Degree mode</span>
+0065       <span class="comment">% -----------------------------------------------------------------</span>
+0066       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0067       expected = expected * (180/pi);
+0068       actual = testCase.antenna.beamwidth_azimuth_3db;
+0069       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0070     <span class="keyword">end</span>
+0071     
+0072     <a name="_sub4" href="#_subfunctions" class="code">function testBeamwidthEl3dB(testCase)</a>
+0073       <span class="comment">% Test elevation 3db beamwidth calculation</span>
+0074       
+0075       <span class="comment">% Radian mode</span>
+0076       <span class="comment">% -----------------------------------------------------------------</span>
+0077       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0078       expected = 0.0593;
+0079       actual = testCase.antenna.beamwidth_elevation_3db;
+0080       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0081       
+0082       <span class="comment">% Degree mode</span>
+0083       <span class="comment">% -----------------------------------------------------------------</span>
+0084       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0085       expected = expected * (180/pi);
+0086       actual = testCase.antenna.beamwidth_elevation_3db;
+0087       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0088     <span class="keyword">end</span>
+0089     
+0090     <a name="_sub5" href="#_subfunctions" class="code">function testPowerGain(testCase)</a>
+0091       <span class="comment">% Test power gain calculations</span>
+0092       
+0093       <span class="comment">% Linear mode</span>
+0094       <span class="comment">% -----------------------------------------------------------------</span>
+0095       testCase.antenna.scale = <span class="string">'linear'</span>;
+0096       <span class="comment">% Radian mode</span>
+0097       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0098       expected = 2.2471e3;
+0099       actual = testCase.antenna.power_gain;
+0100       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0101       <span class="comment">% Degree mode</span>
+0102       <span class="comment">% NOTE: The degree expression is just an approximation, so the</span>
+0103       <span class="comment">% expected value differs from the true value above</span>
+0104       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0105       expected = 2252.846;
+0106       actual = testCase.antenna.power_gain;
+0107       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0108       
+0109       <span class="comment">% dB mode</span>
+0110       <span class="comment">% -----------------------------------------------------------------</span>
+0111       testCase.antenna.scale = <span class="string">'dB'</span>;
+0112       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0113       expected = 10*log10(2.2471e3);
+0114       actual = testCase.antenna.power_gain;
+0115       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0116       
+0117       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0118       expected = 10*log10(2252.846);
+0119       actual = testCase.antenna.power_gain;
+0120       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0121     <span class="keyword">end</span>
+0122     
+0123     <a name="_sub6" href="#_subfunctions" class="code">function testnormVoltageGain(testCase)</a>
+0124       <span class="comment">% Test normalized pattern gain calculation</span>
+0125       
+0126       <span class="comment">% Target positions</span>
+0127       pos_matrix = [testCase.targets.position]';
+0128       
+0129       <span class="comment">% Linear mode</span>
+0130       <span class="comment">% -----------------------------------------------------------------</span>
+0131       testCase.antenna.scale = <span class="string">'linear'</span>;
+0132       
+0133       <span class="comment">% Test Radian mode</span>
+0134       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
+0135       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0136       expected = [1;1;0.000894149];
+0137       actual = testCase.antenna.normVoltageGain(az,el);
+0138       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0139       
+0140       <span class="comment">% Test degree mode</span>
+0141       az = (180/pi)*az; el = (180/pi)*el;
+0142       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0143       actual = testCase.antenna.normVoltageGain(az,el);
+0144       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0145       
+0146       <span class="comment">% dB mode</span>
+0147       <span class="comment">% -----------------------------------------------------------------</span>
+0148       testCase.antenna.scale = <span class="string">'dB'</span>;
+0149       
+0150       <span class="comment">% Test Radian mode</span>
+0151       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
+0152       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0153       expected = 10*log10([1;1;0.000894149]);
+0154       actual = testCase.antenna.normVoltageGain(az,el);
+0155       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0156       
+0157       <span class="comment">% Test degree mode</span>
+0158       az = (180/pi)*az; el = (180/pi)*el;
+0159       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0160       actual = testCase.antenna.normVoltageGain(az,el);
+0161       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
+0162 
+0163     <span class="keyword">end</span>
+0164 
+0165   <span class="keyword">end</span>
+0166   
+0167 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 18-Apr-2021 10:32:45 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+</body>
+</html>
