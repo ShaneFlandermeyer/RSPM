@@ -26,19 +26,30 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     noise_fig;         % System noise figure
     temperature_noise; % Temperature for noise calculations
     bandwidth;         % Receiver bandwidth (at complex baseband = the samp rate)
+    center_freq;
+    wavelength;
   end
   
   % Internally stored class members
-  properties (Access = private)
+  properties (Access = protected)
     d_scale = 'dB';
     d_loss_system;
     d_noise_fig;
     d_temperature_noise;
     d_bandwidth;
+    d_center_freq;
+    d_wavelength;
   end
   
   %% Setter Methods
   methods
+    
+    function set.center_freq(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.d_center_freq = val;
+      obj.d_wavelength = obj.const.c/val;
+    end
+      
 
     function set.noise_fig(obj,val)
       obj.d_noise_fig = val;
@@ -82,6 +93,14 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   end
   %% Getter methods
   methods
+    
+    function out = get.center_freq(obj)
+      out = obj.d_center_freq;
+    end
+    
+    function out = get.wavelength(obj)
+      out = obj.d_wavelength;
+    end
     
     function power = get.power_noise(obj)
       if (strcmpi(obj.scale,'db'))

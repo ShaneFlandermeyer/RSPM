@@ -120,7 +120,7 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
     end
     
-    function testNormPatternGain(testCase)
+    function testnormVoltageGain(testCase)
       % Test normalized pattern gain calculation
       
       % Target positions
@@ -134,13 +134,13 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
       testCase.antenna.angle_unit = 'Radian';
       expected = [1;1;0.000894149];
-      actual = testCase.antenna.normPatternGain(az,el);
+      actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
       % Test degree mode
       az = (180/pi)*az; el = (180/pi)*el;
       testCase.antenna.angle_unit = 'Degree';
-      actual = testCase.antenna.normPatternGain(az,el);
+      actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
       % dB mode
@@ -151,13 +151,13 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
       testCase.antenna.angle_unit = 'Radian';
       expected = 10*log10([1;1;0.000894149]);
-      actual = testCase.antenna.normPatternGain(az,el);
+      actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
       % Test degree mode
       az = (180/pi)*az; el = (180/pi)*el;
       testCase.antenna.angle_unit = 'Degree';
-      actual = testCase.antenna.normPatternGain(az,el);
+      actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
 
     end

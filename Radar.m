@@ -31,7 +31,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   end
   
   % Internal class data
-  properties (Access = private)
+  properties (Access = protected)
     d_antenna;
     d_waveform;
     d_prf;
@@ -40,7 +40,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   end
 
   
-  %% Setters
+  %% Setter Methods
   methods
     
     function set.num_pulses(obj,val)
@@ -68,16 +68,16 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     end
     
     function set.antenna(obj,val)
-      if (isa(val,'Antenna'))
+      if (isa(val,'Antenna') || isa(val,'AntennaArray'))
         obj.d_antenna = val;
       else
-        error('Must be derived from an Antenna object')
+        error('Must be derived from an Antenna or AntennaArray object')
       end
     end
         
   end
   
-  %% Getters
+  %% Getter Methods
   methods   
     
     function out = get.num_pulses(obj)
@@ -207,7 +207,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       
       % Get the antenna gain in the azimuth/elevation of the targets. Also
       % convert to linear units if we're working in dB
-      G = obj.antenna.power_gain*obj.antenna.normPatternGain(az,el).^2;
+      G = obj.antenna.power_gain*obj.antenna.normVoltageGain(az,el).^2;
       % Get the target ranges as seen by the radar
       ranges = obj.trueRange(targets);
       % Calculate the power from the RRE for each target

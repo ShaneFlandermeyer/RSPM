@@ -1,6 +1,6 @@
 % A class representing a rectangular aperture antenna
 
-classdef RectangularAperture < Antenna
+classdef RectangularAperture < AntennaArray
   
   
   % Public API
@@ -17,10 +17,6 @@ classdef RectangularAperture < Antenna
   properties (Access = protected)
     d_width;
     d_height;
-    %     d_area;
-    %     d_beamwidth_azimuth_3db;
-    %     d_beamwidth_elevation_3db;
-    %     d_power_gain;
   end
   
   %% Setters
@@ -85,24 +81,45 @@ classdef RectangularAperture < Antenna
   %% Public methods
   methods (Access = public)
     
-    % Calculate the normalized antenna pattern gain for a given
-    % azimuth/elevation
-    function gain = normPatternGain(obj,az,el)
+    
+    function gain = normVoltageGain(obj,az,el)
+      % Calculate the normalized antenna pattern gain for a given
+      % azimuth/elevation
+      if nargin == 2
+        % If only the azimuth angles are specified, assume zero elevation
+        el = zeros(size(az));
+      end
+      
+      % Compute everything in linear units, but convert back to db if
+      % necessary
+      was_db = false;
+      if strncmpi(obj.scale,'dB',1)
+        obj.scale = 'Linear';
+        was_db = true;
+      end
+        
       if strncmpi(obj.angle_unit,'Radian',1)
         % Get the separable azimuth component
-        P_az = sinc(obj.width/obj.wavelength*sin(az));
+        az_pattern = sinc(obj.width/obj.wavelength*sin(az));
         % Get the separable elevation component
-        P_el = sinc(obj.height/obj.wavelength*sin(el));
+        el_pattern = sinc(obj.height/obj.wavelength*sin(el));
+        gain = abs(az_pattern.*el_pattern);
+        % If the angle is in the backlobe, attenuate it
+        gain(abs(az) >= pi/2) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= pi/2);
       else 
         % Same calculations as above, but with az/el in degrees
-        P_az = sinc(obj.width/obj.wavelength*sind(az));
-        P_el = sinc(obj.height/obj.wavelength*sind(el));
+        az_pattern = sinc(obj.width/obj.wavelength*sind(az));
+        % Get the separable elevation component
+        el_pattern = sinc(obj.height/obj.wavelength*sind(el));
+        gain = abs(az_pattern.*el_pattern);
+        % If the angle is in the backlobe, attenuate it
+        gain(abs(az) >= 90) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= 90);
       end
-      % Get the composite pattern gain
-      gain = P_az.*P_el;
-      % Convert to dB if necessary
-      if strncmpi(obj.scale,'dB',1)
-        gain = 10*log10(gain);
+      
+      % Convert back to dB
+      if was_db
+        obj.scale = 'dB';
+        gain = 20*log10(abs(gain));
       end
         
     end

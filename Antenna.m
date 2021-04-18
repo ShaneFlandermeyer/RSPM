@@ -17,7 +17,7 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     % A list of antenna parameters that are angles, used when switching
     % between radian mode and degree mode
     angle_params = {'azimuth','elevation'};
-    power_quantities = {};
+    power_quantities = {'backlobe_attenuation'};
     voltage_quantities = {};
   end
   
@@ -32,6 +32,7 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     center_freq; % Center frequency
     tx_power; % Tx power
     wavelength; % Carrier wavelength
+    backlobe_attenuation; % Backlobe power attenuation factor
   end
   
   % Hidden properties that store data
@@ -44,7 +45,8 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     d_position; 
     d_center_freq;       
     d_tx_power;          
-    d_wavelength;        
+    d_wavelength;     
+    d_backlobe_attenuation = 0;
   end
   
   % Abstract properties
@@ -52,8 +54,25 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     area;
   end
   
+  % Abstract methods
+  methods (Abstract)
+    gain = normVoltageGain(obj,az,el);
+  end
+  
+  methods
+    function obj = Antenna(size)
+      if (nargin > 0)
+        obj = repmat(obj,size);
+      end
+    end
+  end
   %% Setter methods
   methods
+    
+    function set.backlobe_attenuation(obj,val)
+      validateattributes(val,{'numeric'},{'nonnan'});
+      obj.d_backlobe_attenuation = val;
+    end
     
     function set.scale(obj,val)
       validateattributes(val,{'string','char'},{});
@@ -138,6 +157,11 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   %% Getter methods
   methods
+    
+    function power = get.backlobe_attenuation(obj)
+      power = obj.d_backlobe_attenuation;
+    end
+    
     function mode = get.angle_unit(obj)
       mode = obj.d_angle_unit;
     end
@@ -174,6 +198,26 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       wavelength = obj.d_wavelength;
     end
     
+  end
+  
+  %% Public methods
+  methods (Access = public)
+        
+    function gain = normPowerGain(obj,az,el)
+      % Compute the power pattern gain for the given azimuth/elevations
+      
+      % If elevation isn't specified, assume zero
+      if nargin == 2
+        el = zeros(size(az));
+      end
+      
+      % Calculate the gain in linear or dB
+      if strncmpi(obj.scale,'Linear',1)
+        gain = abs(obj.normVoltageGain(az,el)).^2;
+      else
+        gain = obj.normVoltageGain(az,el);
+      end
+    end
   end
   %% Private Methods
   methods (Access = private)
