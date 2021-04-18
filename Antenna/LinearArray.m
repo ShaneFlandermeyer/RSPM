@@ -72,8 +72,7 @@ classdef LinearArray < AntennaArray
       obj.d_element_pattern = val;
       switch obj.d_element_pattern
         case 'Cosine'
-          obj.elements = CosineAntennaElement(...
-            [obj.num_element,1]);
+          obj.elements = CosineAntenna([obj.num_element,1]);
       end
     end
     

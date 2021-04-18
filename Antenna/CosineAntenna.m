@@ -1,6 +1,6 @@
 % A class representation of an antenna element with a 2D cosine beampattern
 
-classdef CosineAntennaElement < Antenna
+classdef CosineAntenna < Antenna
   
   properties
     % Aperture area. For now, I'm not doing anything with this parameter

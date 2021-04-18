@@ -2,10 +2,54 @@
 
 classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
+  properties (Constant, Access = protected)
+    const = struct('c',299792458)
+  end
   properties (Dependent)
+    elements;
+    center_freq;
+    wavelength;
   end
   
   properties (Access = protected)
+    d_elements;
+    d_center_freq;
+    d_wavelength;
+  end
+  %% Setter Methods
+  
+  methods 
+    function set.elements(obj,val)
+      obj.d_elements = val;
+    end
+    
+    function set.center_freq(obj,val)
+      obj.d_center_freq = val;
+      obj.d_wavelength = obj.const.c/val;
+    end
+    
+    function set.wavelength(obj,val)
+      obj.d_wavelength = val;
+      obj.d_center_freq = obj.const.c/obj.wavelength;
+    end
+    
+  end
+  
+  %% Getter Methods
+  methods
+    
+    function out = get.elements(obj)
+      out = obj.d_elements;
+    end
+    
+    function out = get.center_freq(obj)
+      out = obj.d_center_freq;
+    end
+    
+    function out = get.wavelength(obj)
+      out = obj.d_wavelength;
+    end
+    
   end
   
   %% Hidden Methods
