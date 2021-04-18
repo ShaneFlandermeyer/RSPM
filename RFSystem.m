@@ -32,6 +32,10 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   
   % Internally stored class members
   properties (Access = protected)
+  end
+  
+  % Internally stored class members
+  properties (Access = private)
     d_scale = 'dB';
     d_loss_system;
     d_noise_fig;
@@ -49,7 +53,6 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
       obj.d_center_freq = val;
       obj.d_wavelength = obj.const.c/val;
     end
-      
 
     function set.noise_fig(obj,val)
       obj.d_noise_fig = val;
