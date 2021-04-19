@@ -29,6 +29,7 @@
 <h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
 <div class="fragment"><pre class="comment"> Class Representation of a rectangular array aperture
 
+ NOT USED FOR FINAL PROJECT. DOESN'T WORK AND ISN'T NEEDED RIGHT NOW!!!
  Blame: Shane Flandermeyer
 
  TODO:
@@ -52,155 +53,156 @@ This function is called by:
 <h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
 <div class="fragment"><pre>0001 <span class="comment">% Class Representation of a rectangular array aperture</span>
 0002 <span class="comment">%</span>
-0003 <span class="comment">% Blame: Shane Flandermeyer</span>
-0004 <span class="comment">%</span>
-0005 <span class="comment">% TODO:</span>
-0006 <span class="comment">%  - Add parameter for dB/linear scales</span>
-0007 <span class="comment">%  - Add parameter for angle unit</span>
-0008 classdef <a href="PlanarArray.html" class="code" title="">PlanarArray</a> &lt; <a href="AntennaArray.html" class="code" title="">AntennaArray</a>
-0009   properties (Dependent)
-0010     num_element_horiz; <span class="comment">% Number of horizontal array elements</span>
-0011     num_element_vert;  <span class="comment">% Number of vertical array elements</span>
-0012     element_pattern;   <span class="comment">% Element beampattern</span>
-0013     gain_element;      <span class="comment">% Element Gain</span>
-0014     <span class="comment">%     elements;          % Element matrix</span>
-0015     spacing_element;
-0016     angle_steering;
-0017     gain_tx;
-0018     gain_rx;
-0019     gain_tx_array;
-0020     gain_rx_array;
-0021   <span class="keyword">end</span>
-0022   
-0023   properties (Access = protected)
-0024     d_num_element_horiz;
-0025     d_num_element_vert;
-0026     d_element_pattern;
-0027     d_gain_element;
-0028     <span class="comment">%     d_elements;</span>
-0029     d_spacing_element;
-0030     d_angle_steering;
-0031     d_gain_tx;
-0032     d_gain_rx;
-0033     d_gain_tx_array;
-0034     d_gain_rx_array;
-0035   <span class="keyword">end</span>
-0036   
-0037   <span class="comment">%% Public Methods</span>
-0038   methods (Access = public)
-0039     <a name="_sub0" href="#_subfunctions" class="code">function AF = arrayFactor(obj,az,el)</a>
-0040       <span class="keyword">if</span> nargin == 2
-0041         el = zeros(size(az));
-0042       <span class="keyword">end</span>
-0043       AF_horiz = zeros(size(az));
-0044       AF_vert = zeros(size(el));
-0045       <span class="keyword">for</span> ii = 1:length(az)
-0046         AF_horiz(ii) = sum(exp(1i*2*pi/obj.wavelength*obj.spacing_element*<span class="keyword">...</span>
-0047           (0:obj.num_element_horiz)*(cosd(az(ii))-cosd(obj.angle_steering))));
-0048         AF_vert(ii) = sum(exp(1i*2*pi/obj.wavelength*obj.spacing_element*<span class="keyword">...</span>
-0049           (0:obj.num_element_vert)*(cosd(el(ii))-cosd(obj.angle_steering))));
-0050       <span class="keyword">end</span>
-0051       AF = AF_horiz.*AF_vert;
-0052     <span class="keyword">end</span>
-0053     
-0054   <span class="keyword">end</span>
-0055   <span class="comment">%% Setter Methods</span>
-0056   methods
-0057     
-0058     <a name="_sub1" href="#_subfunctions" class="code">function set.gain_tx_array(obj,val)</a>
-0059       obj.d_gain_tx_array = val;
-0060     <span class="keyword">end</span>
-0061     
-0062     <a name="_sub2" href="#_subfunctions" class="code">function set.gain_rx_array(obj,val)</a>
-0063       obj.d_gain_rx_array = val;
-0064     <span class="keyword">end</span>
-0065     
-0066     <a name="_sub3" href="#_subfunctions" class="code">function set.gain_tx(obj,val)</a>
-0067       obj.d_gain_tx = val;
-0068     <span class="keyword">end</span>
-0069     
-0070     <a name="_sub4" href="#_subfunctions" class="code">function set.gain_rx(obj,val)</a>
-0071       obj.d_gain_rx = val;
-0072     <span class="keyword">end</span>
-0073     
-0074     <a name="_sub5" href="#_subfunctions" class="code">function set.angle_steering(obj,val)</a>
-0075       obj.d_angle_steering = val;
-0076     <span class="keyword">end</span>
-0077     
-0078     <a name="_sub6" href="#_subfunctions" class="code">function set.spacing_element(obj,val)</a>
-0079       obj.d_spacing_element = val;
-0080     <span class="keyword">end</span>
-0081     
-0082     <a name="_sub7" href="#_subfunctions" class="code">function set.num_element_horiz(obj,val)</a>
-0083       obj.d_num_element_horiz = val;
-0084     <span class="keyword">end</span>
-0085     
-0086     <a name="_sub8" href="#_subfunctions" class="code">function set.num_element_vert(obj,val)</a>
-0087       obj.d_num_element_vert = val;
-0088     <span class="keyword">end</span>
-0089     
-0090     <a name="_sub9" href="#_subfunctions" class="code">function set.element_pattern(obj,val)</a>
-0091       <span class="comment">% TODO</span>
-0092       validateattributes(val,{<span class="string">'string'</span>,<span class="string">'char'</span>},{});
-0093       obj.d_element_pattern = val;
-0094       <span class="keyword">switch</span> obj.d_element_pattern
-0095         <span class="keyword">case</span> <span class="string">'Cosine'</span>
-0096           obj.elements = CosineAntennaElement(<span class="keyword">...</span>
-0097             [obj.num_element_horiz,obj.num_element_vert]);
-0098       <span class="keyword">end</span>
-0099     <span class="keyword">end</span>
-0100     
-0101     <a name="_sub10" href="#_subfunctions" class="code">function set.gain_element(obj,val)</a>
-0102       obj.d_gain_element = val;
-0103     <span class="keyword">end</span>
-0104     
-0105   <span class="keyword">end</span>
-0106   <span class="comment">%% Getter Methods</span>
-0107   methods
-0108     
-0109     <a name="_sub11" href="#_subfunctions" class="code">function out = get.gain_tx_array(obj)</a>
-0110       out = obj.d_gain_tx_array;
-0111     <span class="keyword">end</span>
-0112     
-0113     <a name="_sub12" href="#_subfunctions" class="code">function out = get.gain_rx_array(obj)</a>
-0114       out = obj.d_gain_rx_array;
-0115     <span class="keyword">end</span>
-0116     
-0117     <a name="_sub13" href="#_subfunctions" class="code">function out = get.gain_tx(obj)</a>
-0118       out = obj.d_gain_tx;
-0119     <span class="keyword">end</span>
-0120     
-0121     <a name="_sub14" href="#_subfunctions" class="code">function out = get.gain_rx(obj)</a>
-0122       out = obj.d_gain_rx;
-0123     <span class="keyword">end</span>
-0124     
-0125     <a name="_sub15" href="#_subfunctions" class="code">function out = get.angle_steering(obj)</a>
-0126       out = obj.d_angle_steering;
-0127     <span class="keyword">end</span>
-0128     
-0129     <a name="_sub16" href="#_subfunctions" class="code">function out = get.spacing_element(obj)</a>
-0130       out = obj.d_spacing_element;
-0131     <span class="keyword">end</span>
-0132     
-0133     <a name="_sub17" href="#_subfunctions" class="code">function out = get.num_element_horiz(obj)</a>
-0134       out = obj.d_num_element_horiz;
-0135     <span class="keyword">end</span>
-0136     
-0137     <a name="_sub18" href="#_subfunctions" class="code">function out = get.num_element_vert(obj)</a>
-0138       out = obj.d_num_element_vert;
-0139     <span class="keyword">end</span>
-0140     
-0141     <a name="_sub19" href="#_subfunctions" class="code">function out = get.element_pattern(obj)</a>
-0142       out = obj.d_element_pattern;
-0143     <span class="keyword">end</span>
-0144     
-0145     <a name="_sub20" href="#_subfunctions" class="code">function out = get.gain_element(obj)</a>
-0146       out = obj.d_gain_element;
-0147     <span class="keyword">end</span>
-0148     
-0149   <span class="keyword">end</span>
-0150   
-0151 <span class="keyword">end</span></pre></div>
-<hr><address>Generated on Sun 18-Apr-2021 20:02:12 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+0003 <span class="comment">% NOT USED FOR FINAL PROJECT. DOESN'T WORK AND ISN'T NEEDED RIGHT NOW!!!</span>
+0004 <span class="comment">% Blame: Shane Flandermeyer</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% TODO:</span>
+0007 <span class="comment">%  - Add parameter for dB/linear scales</span>
+0008 <span class="comment">%  - Add parameter for angle unit</span>
+0009 classdef <a href="PlanarArray.html" class="code" title="">PlanarArray</a> &lt; <a href="AntennaArray.html" class="code" title="">AntennaArray</a>
+0010   properties (Dependent)
+0011     num_element_horiz; <span class="comment">% Number of horizontal array elements</span>
+0012     num_element_vert;  <span class="comment">% Number of vertical array elements</span>
+0013     element_pattern;   <span class="comment">% Element beampattern</span>
+0014     gain_element;      <span class="comment">% Element Gain</span>
+0015     <span class="comment">%     elements;          % Element matrix</span>
+0016     spacing_element;
+0017     angle_steering;
+0018     gain_tx;
+0019     gain_rx;
+0020     gain_tx_array;
+0021     gain_rx_array;
+0022   <span class="keyword">end</span>
+0023   
+0024   properties (Access = protected)
+0025     d_num_element_horiz;
+0026     d_num_element_vert;
+0027     d_element_pattern;
+0028     d_gain_element;
+0029     <span class="comment">%     d_elements;</span>
+0030     d_spacing_element;
+0031     d_angle_steering;
+0032     d_gain_tx;
+0033     d_gain_rx;
+0034     d_gain_tx_array;
+0035     d_gain_rx_array;
+0036   <span class="keyword">end</span>
+0037   
+0038   <span class="comment">%% Public Methods</span>
+0039   methods (Access = public)
+0040     <a name="_sub0" href="#_subfunctions" class="code">function AF = arrayFactor(obj,az,el)</a>
+0041       <span class="keyword">if</span> nargin == 2
+0042         el = zeros(size(az));
+0043       <span class="keyword">end</span>
+0044       AF_horiz = zeros(size(az));
+0045       AF_vert = zeros(size(el));
+0046       <span class="keyword">for</span> ii = 1:length(az)
+0047         AF_horiz(ii) = sum(exp(1i*2*pi/obj.wavelength*obj.spacing_element*<span class="keyword">...</span>
+0048           (0:obj.num_element_horiz)*(cosd(az(ii))-cosd(obj.angle_steering))));
+0049         AF_vert(ii) = sum(exp(1i*2*pi/obj.wavelength*obj.spacing_element*<span class="keyword">...</span>
+0050           (0:obj.num_element_vert)*(cosd(el(ii))-cosd(obj.angle_steering))));
+0051       <span class="keyword">end</span>
+0052       AF = AF_horiz.*AF_vert;
+0053     <span class="keyword">end</span>
+0054     
+0055   <span class="keyword">end</span>
+0056   <span class="comment">%% Setter Methods</span>
+0057   methods
+0058     
+0059     <a name="_sub1" href="#_subfunctions" class="code">function set.gain_tx_array(obj,val)</a>
+0060       obj.d_gain_tx_array = val;
+0061     <span class="keyword">end</span>
+0062     
+0063     <a name="_sub2" href="#_subfunctions" class="code">function set.gain_rx_array(obj,val)</a>
+0064       obj.d_gain_rx_array = val;
+0065     <span class="keyword">end</span>
+0066     
+0067     <a name="_sub3" href="#_subfunctions" class="code">function set.gain_tx(obj,val)</a>
+0068       obj.d_gain_tx = val;
+0069     <span class="keyword">end</span>
+0070     
+0071     <a name="_sub4" href="#_subfunctions" class="code">function set.gain_rx(obj,val)</a>
+0072       obj.d_gain_rx = val;
+0073     <span class="keyword">end</span>
+0074     
+0075     <a name="_sub5" href="#_subfunctions" class="code">function set.angle_steering(obj,val)</a>
+0076       obj.d_angle_steering = val;
+0077     <span class="keyword">end</span>
+0078     
+0079     <a name="_sub6" href="#_subfunctions" class="code">function set.spacing_element(obj,val)</a>
+0080       obj.d_spacing_element = val;
+0081     <span class="keyword">end</span>
+0082     
+0083     <a name="_sub7" href="#_subfunctions" class="code">function set.num_element_horiz(obj,val)</a>
+0084       obj.d_num_element_horiz = val;
+0085     <span class="keyword">end</span>
+0086     
+0087     <a name="_sub8" href="#_subfunctions" class="code">function set.num_element_vert(obj,val)</a>
+0088       obj.d_num_element_vert = val;
+0089     <span class="keyword">end</span>
+0090     
+0091     <a name="_sub9" href="#_subfunctions" class="code">function set.element_pattern(obj,val)</a>
+0092       <span class="comment">% TODO</span>
+0093       validateattributes(val,{<span class="string">'string'</span>,<span class="string">'char'</span>},{});
+0094       obj.d_element_pattern = val;
+0095       <span class="keyword">switch</span> obj.d_element_pattern
+0096         <span class="keyword">case</span> <span class="string">'Cosine'</span>
+0097           obj.elements = CosineAntennaElement(<span class="keyword">...</span>
+0098             [obj.num_element_horiz,obj.num_element_vert]);
+0099       <span class="keyword">end</span>
+0100     <span class="keyword">end</span>
+0101     
+0102     <a name="_sub10" href="#_subfunctions" class="code">function set.gain_element(obj,val)</a>
+0103       obj.d_gain_element = val;
+0104     <span class="keyword">end</span>
+0105     
+0106   <span class="keyword">end</span>
+0107   <span class="comment">%% Getter Methods</span>
+0108   methods
+0109     
+0110     <a name="_sub11" href="#_subfunctions" class="code">function out = get.gain_tx_array(obj)</a>
+0111       out = obj.d_gain_tx_array;
+0112     <span class="keyword">end</span>
+0113     
+0114     <a name="_sub12" href="#_subfunctions" class="code">function out = get.gain_rx_array(obj)</a>
+0115       out = obj.d_gain_rx_array;
+0116     <span class="keyword">end</span>
+0117     
+0118     <a name="_sub13" href="#_subfunctions" class="code">function out = get.gain_tx(obj)</a>
+0119       out = obj.d_gain_tx;
+0120     <span class="keyword">end</span>
+0121     
+0122     <a name="_sub14" href="#_subfunctions" class="code">function out = get.gain_rx(obj)</a>
+0123       out = obj.d_gain_rx;
+0124     <span class="keyword">end</span>
+0125     
+0126     <a name="_sub15" href="#_subfunctions" class="code">function out = get.angle_steering(obj)</a>
+0127       out = obj.d_angle_steering;
+0128     <span class="keyword">end</span>
+0129     
+0130     <a name="_sub16" href="#_subfunctions" class="code">function out = get.spacing_element(obj)</a>
+0131       out = obj.d_spacing_element;
+0132     <span class="keyword">end</span>
+0133     
+0134     <a name="_sub17" href="#_subfunctions" class="code">function out = get.num_element_horiz(obj)</a>
+0135       out = obj.d_num_element_horiz;
+0136     <span class="keyword">end</span>
+0137     
+0138     <a name="_sub18" href="#_subfunctions" class="code">function out = get.num_element_vert(obj)</a>
+0139       out = obj.d_num_element_vert;
+0140     <span class="keyword">end</span>
+0141     
+0142     <a name="_sub19" href="#_subfunctions" class="code">function out = get.element_pattern(obj)</a>
+0143       out = obj.d_element_pattern;
+0144     <span class="keyword">end</span>
+0145     
+0146     <a name="_sub20" href="#_subfunctions" class="code">function out = get.gain_element(obj)</a>
+0147       out = obj.d_gain_element;
+0148     <span class="keyword">end</span>
+0149     
+0150   <span class="keyword">end</span>
+0151   
+0152 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Mon 19-Apr-2021 11:30:41 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
 </body>
 </html>

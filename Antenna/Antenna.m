@@ -1,9 +1,4 @@
-% A class representing an antenna.
-%
-% NOTE FOR PROJECT 2: This class has not been modified since project 1.
-%
-% TODO: Make this an abstract class and implement subclasses for different
-% types of antennas. Right now this is just a rectangular aperture.
+% A class representing a single antenna element.
 %
 % Blame: Shane Flandermeyer
 
@@ -27,21 +22,21 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   % Visible properties
   properties (Dependent)
-    angle_unit; % Specify parameters in radian or degree
-    scale; % Specify parameters in dB or radian
-    azimuth; % Azimuth angle of the antenna aperture w.r.t the x axis
-    elevation; % Elevation angle of the antenna aperture
-    mainbeam_direction; % Cartesian (XYZ) antenna beam unit vector
-    position; % Cartesian (XYZ) antenna position
-    center_freq; % Center frequency
-    tx_power; % Tx power
-    wavelength; % Carrier wavelength
+    angle_unit;           % Specify parameters in radian or degree
+    scale;                % Specify parameters in dB or radian
+    azimuth;              % Azimuth angle of the antenna aperture w.r.t the x axis
+    elevation;            % Elevation angle of the antenna aperture
+    mainbeam_direction;   % Cartesian (XYZ) antenna beam unit vector
+    position;             % Cartesian (XYZ) antenna position
+    center_freq;          % Center frequency
+    tx_power;             % Tx power
+    wavelength;           % Carrier wavelength
     backlobe_attenuation; % Backlobe power attenuation factor
   end
   
   % Hidden properties that store data
   properties (Access = protected)
-    d_angle_unit = 'Radian'; 
+    d_angle_unit = 'Radians'; 
     d_scale = 'dB'; 
     d_azimuth; 
     d_elevation;
@@ -55,7 +50,7 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   % Abstract properties
   properties (Abstract)
-    area;
+    area; % Aperture area
   end
   
   % Abstract methods
@@ -63,18 +58,24 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     gain = normVoltageGain(obj,az,el);
   end
   
+  %% Constructors
   methods
+    
     function obj = Antenna(size)
+      % Default constructor
       if (nargin > 0)
+        % Output an array or matrix of antenna elements
+        % TODO: Check for valid inputs before doing this
         obj = repmat(obj,size);
       end
     end
+    
   end
   %% Setter methods
   methods
     
     function set.backlobe_attenuation(obj,val)
-      validateattributes(val,{'numeric'},{'nonnan'});
+      validateattributes(val,{'numeric'},{'scalar','nonnan'});
       obj.d_backlobe_attenuation = val;
     end
     
@@ -93,13 +94,13 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     
     function set.angle_unit(obj,val)
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Degree',1)
+      if strncmpi(val,'Degrees',1)
         % Convert angle measures to degree
-        obj.d_angle_unit = 'Degree';
+        obj.d_angle_unit = 'Degrees';
         obj.convertToDegree();
-      elseif strncmpi(val,'Radian',1)
+      elseif strncmpi(val,'Radians',1)
         % Convert angle measures to radians
-        obj.d_angle_unit = 'Radian';
+        obj.d_angle_unit = 'Radians';
         obj.convertToRadian();
       end
     end

@@ -33,7 +33,7 @@
 <h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
 This function calls:
 <ul style="list-style-image:url(../../matlabicon.gif)">
-<li><a href="Antenna.html" class="code" title="">Antenna</a>	A class representing an antenna.</li><li><a href="RectangularAntenna.html" class="code" title="">RectangularAntenna</a>	A class representing a rectangular aperture antenna</li></ul>
+<li><a href="Antenna.html" class="code" title="">Antenna</a>	A class representing a single antenna element.</li><li><a href="RectangularAntenna.html" class="code" title="">RectangularAntenna</a>	A class representing a rectangular aperture antenna</li></ul>
 This function is called by:
 <ul style="list-style-image:url(../../matlabicon.gif)">
 <li><a href="RectangularAntenna.html" class="code" title="">RectangularAntenna</a>	A class representing a rectangular aperture antenna</li></ul>
@@ -51,12 +51,12 @@ This function is called by:
 0005   
 0006   <span class="comment">% Public API</span>
 0007   properties (Dependent)
-0008     width; <span class="comment">% Width of the antenna aperture</span>
-0009     height; <span class="comment">% Height of the antenna aperture</span>
-0010     area;
-0011     beamwidth_azimuth_3db;
-0012     beamwidth_elevation_3db;
-0013     power_gain;
+0008     width;                   <span class="comment">% Width of the antenna aperture</span>
+0009     height;                  <span class="comment">% Height of the antenna aperture</span>
+0010     area;                    <span class="comment">% Aperture area</span>
+0011     beamwidth_azimuth_3db;   <span class="comment">% 3db beamwidth in azimuth</span>
+0012     beamwidth_elevation_3db; <span class="comment">% 3db beamwidth in elevation</span>
+0013     power_gain;              <span class="comment">% Power gain</span>
 0014   <span class="keyword">end</span>
 0015   
 0016   <span class="comment">% Properties that store the data</span>
@@ -97,20 +97,20 @@ This function is called by:
 0051     
 0052     <a name="_sub5" href="#_subfunctions" class="code">function beamwidth = get.beamwidth_azimuth_3db(obj)</a>
 0053       beamwidth = 0.89*obj.wavelength/obj.width;
-0054       <span class="keyword">if</span> (strncmpi(obj.angle_unit,<span class="string">'Degree'</span>,1))
+0054       <span class="keyword">if</span> (strncmpi(obj.angle_unit,<span class="string">'Degrees'</span>,1))
 0055         beamwidth = (180/pi)*beamwidth;
 0056       <span class="keyword">end</span>
 0057     <span class="keyword">end</span>
 0058     
 0059     <a name="_sub6" href="#_subfunctions" class="code">function beamwidth = get.beamwidth_elevation_3db(obj)</a>
 0060       beamwidth = 0.89*obj.wavelength/obj.height;
-0061       <span class="keyword">if</span> (strncmpi(obj.angle_unit,<span class="string">'Degree'</span>,1))
+0061       <span class="keyword">if</span> (strncmpi(obj.angle_unit,<span class="string">'Degrees'</span>,1))
 0062         beamwidth = (180/pi)*beamwidth;
 0063       <span class="keyword">end</span>
 0064     <span class="keyword">end</span>
 0065     
 0066     <a name="_sub7" href="#_subfunctions" class="code">function gain = get.power_gain(obj)</a>
-0067       <span class="keyword">if</span> strncmpi(obj.angle_unit,<span class="string">'Degree'</span>,1)
+0067       <span class="keyword">if</span> strncmpi(obj.angle_unit,<span class="string">'Degrees'</span>,1)
 0068         gain = 26e3/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
 0069       <span class="keyword">else</span>
 0070         gain = 7.9/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
@@ -144,7 +144,7 @@ This function is called by:
 0098         was_db = true;
 0099       <span class="keyword">end</span>
 0100         
-0101       <span class="keyword">if</span> strncmpi(obj.angle_unit,<span class="string">'Radian'</span>,1)
+0101       <span class="keyword">if</span> strncmpi(obj.angle_unit,<span class="string">'Radians'</span>,1)
 0102         <span class="comment">% Get the separable azimuth component</span>
 0103         az_pattern = sinc(obj.width/obj.wavelength*sin(az));
 0104         <span class="comment">% Get the separable elevation component</span>
@@ -174,6 +174,6 @@ This function is called by:
 0128   
 0129   
 0130 <span class="keyword">end</span></pre></div>
-<hr><address>Generated on Sun 18-Apr-2021 20:02:12 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+<hr><address>Generated on Mon 19-Apr-2021 11:30:41 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
 </body>
 </html>

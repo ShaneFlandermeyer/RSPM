@@ -100,16 +100,16 @@ This function is called by:
 0054     <a name="_sub3" href="#_subfunctions" class="code">function testBeamwidthAz3dB(testCase)</a>
 0055       <span class="comment">% Test azimuth 3db beamwidth calculation</span>
 0056       
-0057       <span class="comment">% Radian mode</span>
+0057       <span class="comment">% Radians mode</span>
 0058       <span class="comment">% -----------------------------------------------------------------</span>
-0059       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0059       testCase.antenna.angle_unit = <span class="string">'Radians'</span>;
 0060       expected = 0.0593;
 0061       actual = testCase.antenna.beamwidth_azimuth_3db;
 0062       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
 0063       
-0064       <span class="comment">% Degree mode</span>
+0064       <span class="comment">% Degrees mode</span>
 0065       <span class="comment">% -----------------------------------------------------------------</span>
-0066       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0066       testCase.antenna.angle_unit = <span class="string">'Degrees'</span>;
 0067       expected = expected * (180/pi);
 0068       actual = testCase.antenna.beamwidth_azimuth_3db;
 0069       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
@@ -118,16 +118,16 @@ This function is called by:
 0072     <a name="_sub4" href="#_subfunctions" class="code">function testBeamwidthEl3dB(testCase)</a>
 0073       <span class="comment">% Test elevation 3db beamwidth calculation</span>
 0074       
-0075       <span class="comment">% Radian mode</span>
+0075       <span class="comment">% Radians mode</span>
 0076       <span class="comment">% -----------------------------------------------------------------</span>
-0077       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0077       testCase.antenna.angle_unit = <span class="string">'Radians'</span>;
 0078       expected = 0.0593;
 0079       actual = testCase.antenna.beamwidth_elevation_3db;
 0080       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
 0081       
-0082       <span class="comment">% Degree mode</span>
+0082       <span class="comment">% Degrees mode</span>
 0083       <span class="comment">% -----------------------------------------------------------------</span>
-0084       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0084       testCase.antenna.angle_unit = <span class="string">'Degrees'</span>;
 0085       expected = expected * (180/pi);
 0086       actual = testCase.antenna.beamwidth_elevation_3db;
 0087       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
@@ -139,15 +139,15 @@ This function is called by:
 0093       <span class="comment">% Linear mode</span>
 0094       <span class="comment">% -----------------------------------------------------------------</span>
 0095       testCase.antenna.scale = <span class="string">'linear'</span>;
-0096       <span class="comment">% Radian mode</span>
-0097       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0096       <span class="comment">% Radians mode</span>
+0097       testCase.antenna.angle_unit = <span class="string">'Radians'</span>;
 0098       expected = 2.2471e3;
 0099       actual = testCase.antenna.power_gain;
 0100       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
-0101       <span class="comment">% Degree mode</span>
+0101       <span class="comment">% Degrees mode</span>
 0102       <span class="comment">% NOTE: The degree expression is just an approximation, so the</span>
 0103       <span class="comment">% expected value differs from the true value above</span>
-0104       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0104       testCase.antenna.angle_unit = <span class="string">'Degrees'</span>;
 0105       expected = 2252.846;
 0106       actual = testCase.antenna.power_gain;
 0107       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
@@ -155,12 +155,12 @@ This function is called by:
 0109       <span class="comment">% dB mode</span>
 0110       <span class="comment">% -----------------------------------------------------------------</span>
 0111       testCase.antenna.scale = <span class="string">'dB'</span>;
-0112       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0112       testCase.antenna.angle_unit = <span class="string">'Radians'</span>;
 0113       expected = 10*log10(2.2471e3);
 0114       actual = testCase.antenna.power_gain;
 0115       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
 0116       
-0117       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0117       testCase.antenna.angle_unit = <span class="string">'Degrees'</span>;
 0118       expected = 10*log10(2252.846);
 0119       actual = testCase.antenna.power_gain;
 0120       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
@@ -176,16 +176,16 @@ This function is called by:
 0130       <span class="comment">% -----------------------------------------------------------------</span>
 0131       testCase.antenna.scale = <span class="string">'linear'</span>;
 0132       
-0133       <span class="comment">% Test Radian mode</span>
+0133       <span class="comment">% Test Radians mode</span>
 0134       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
-0135       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0135       testCase.antenna.angle_unit = <span class="string">'Radians'</span>;
 0136       expected = [1;1;0.000894149];
 0137       actual = testCase.antenna.normVoltageGain(az,el);
 0138       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
 0139       
 0140       <span class="comment">% Test degree mode</span>
 0141       az = (180/pi)*az; el = (180/pi)*el;
-0142       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0142       testCase.antenna.angle_unit = <span class="string">'Degrees'</span>;
 0143       actual = testCase.antenna.normVoltageGain(az,el);
 0144       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
 0145       
@@ -193,16 +193,16 @@ This function is called by:
 0147       <span class="comment">% -----------------------------------------------------------------</span>
 0148       testCase.antenna.scale = <span class="string">'dB'</span>;
 0149       
-0150       <span class="comment">% Test Radian mode</span>
+0150       <span class="comment">% Test Radians mode</span>
 0151       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
-0152       testCase.antenna.angle_unit = <span class="string">'Radian'</span>;
+0152       testCase.antenna.angle_unit = <span class="string">'Radians'</span>;
 0153       expected = 10*log10([1;1;0.000894149]);
 0154       actual = testCase.antenna.normVoltageGain(az,el);
 0155       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
 0156       
 0157       <span class="comment">% Test degree mode</span>
 0158       az = (180/pi)*az; el = (180/pi)*el;
-0159       testCase.antenna.angle_unit = <span class="string">'Degree'</span>;
+0159       testCase.antenna.angle_unit = <span class="string">'Degrees'</span>;
 0160       actual = testCase.antenna.normVoltageGain(az,el);
 0161       testCase.verifyEqual(actual,expected,<span class="string">'RelTol'</span>,1e-3)
 0162 
@@ -211,6 +211,6 @@ This function is called by:
 0165   <span class="keyword">end</span>
 0166   
 0167 <span class="keyword">end</span></pre></div>
-<hr><address>Generated on Sun 18-Apr-2021 20:02:12 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+<hr><address>Generated on Mon 19-Apr-2021 11:30:41 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
 </body>
 </html>

@@ -33,7 +33,7 @@
 <h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
 This function calls:
 <ul style="list-style-image:url(../../matlabicon.gif)">
-<li><a href="Antenna.html" class="code" title="">Antenna</a>	A class representing an antenna.</li><li><a href="CosineAntenna.html" class="code" title="">CosineAntenna</a>	A class representation of an antenna element with a 2D cosine beampattern</li></ul>
+<li><a href="Antenna.html" class="code" title="">Antenna</a>	A class representing a single antenna element.</li><li><a href="CosineAntenna.html" class="code" title="">CosineAntenna</a>	A class representation of an antenna element with a 2D cosine beampattern</li></ul>
 This function is called by:
 <ul style="list-style-image:url(../../matlabicon.gif)">
 <li><a href="CosineAntenna.html" class="code" title="">CosineAntenna</a>	A class representation of an antenna element with a 2D cosine beampattern</li><li><a href="LinearArray.html" class="code" title="">LinearArray</a>	A class representing a linear antenna array</li></ul>
@@ -81,13 +81,13 @@ This function is called by:
 0035         was_db = true;
 0036       <span class="keyword">end</span>
 0037       
-0038       <span class="keyword">if</span> strncmpi(obj.angle_unit,<span class="string">'Radian'</span>,1)
-0039         <span class="comment">% Radian angles</span>
+0038       <span class="keyword">if</span> strncmpi(obj.angle_unit,<span class="string">'Radians'</span>,1)
+0039         <span class="comment">% Radians angles</span>
 0040         gain = abs(cos(az).*cos(el));
 0041         <span class="comment">% If the angle is in the backlobe, attenuate it</span>
 0042         gain(abs(az) &gt;= pi/2) = sqrt(obj.backlobe_attenuation)*gain(abs(az) &gt;= pi/2);
 0043       <span class="keyword">else</span>
-0044         <span class="comment">% Degree angles</span>
+0044         <span class="comment">% Degrees angles</span>
 0045         gain = abs(cosd(az).*cosd(el));
 0046         <span class="comment">% If the angle is in the backlobe, attenuate it</span>
 0047         gain(abs(az) &gt;= 90) = sqrt(obj.backlobe_attenuation)*gain(abs(az) &gt;= 90);
@@ -102,6 +102,6 @@ This function is called by:
 0056     <span class="keyword">end</span>
 0057   <span class="keyword">end</span>
 0058 <span class="keyword">end</span></pre></div>
-<hr><address>Generated on Sun 18-Apr-2021 20:02:12 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+<hr><address>Generated on Mon 19-Apr-2021 11:30:41 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
 </body>
 </html>

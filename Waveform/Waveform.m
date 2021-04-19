@@ -1,4 +1,4 @@
-% An abstract class representing a waveform 
+% An abstract class representing a waveform
 %
 % Blame: Shane Flandermeyer
 
@@ -8,7 +8,7 @@ classdef  (Abstract) Waveform < matlab.mixin.Copyable & matlab.mixin.CustomDispl
   properties (Access = public)
     samp_rate; % ADC sample rate
     % Waveform normalization (options: None, Energy, Time-Bandwidth)
-    normalization = 'None'; 
+    normalization = 'None';
   end
   
   properties (Abstract)
@@ -19,31 +19,39 @@ classdef  (Abstract) Waveform < matlab.mixin.Copyable & matlab.mixin.CustomDispl
     data; % Data vector for a waveform with the given parameters
   end
   
-  %% Getters and setters
+  %% Setter Methods
   methods
     
     function set.normalization(obj,val)
+      
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Time-Bandwidth',1) 
+      if strncmpi(val,'Time-Bandwidth',1)
         obj.normalization = 'Time-Bandwidth';
-      elseif strncmpi(val,'Energy',1) 
+      elseif strncmpi(val,'Energy',1)
         obj.normalization = 'Energy';
       elseif strncmpi(val,'None',1)
         obj.normalization = 'None';
       else
         error('Unknown normalization type')
       end
+      
     end
+    
+  end
+  
+  %% Getter methods
+  methods
     
     function data = get.data(obj)
       data = waveform(obj);
     end
+    
   end
   %% Abstract Methods
   methods (Abstract)
     % Calculate the ambiguity function and return it along with proper delay and
     % doppler axes
-    [ambfun,t,fd] = ambiguityFunction(obj); 
+    [ambfun,t,fd] = ambiguityFunction(obj);
     data = waveform(obj); % Generate a waveform vector from an object
   end
   

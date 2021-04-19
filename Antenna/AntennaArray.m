@@ -2,9 +2,10 @@
 
 classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
-  properties (Access = private)
+  properties (Access = protected)
     power_quantities = {'gain_element','gain_tx','gain_rx'};
     voltage_quantities = {};
+    angle_quantities = {};
   end
   
   properties (Constant, Access = protected)
@@ -20,7 +21,7 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
   end
   
   properties (Access = protected)
-    d_angle_unit = 'Radian';
+    d_angle_unit = 'Radians';
     d_scale = 'dB';
     d_elements;
     d_center_freq;
@@ -32,42 +33,53 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
     
     function set.angle_unit(obj,val)
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Degree',1)
+      if strncmpi(val,'Degrees',1)
         % Convert angle measures to degree
-        obj.d_angle_unit = 'Degree';
-%         obj.convertToDegree();
-      elseif strncmpi(val,'Radian',1)
+        obj.d_angle_unit = 'Degrees';
+        obj.convertToDegree();
+        % Also update the individual element objects
+        [obj.elements.angle_unit] = deal('Degrees');
+      elseif strncmpi(val,'Radians',1)
         % Convert angle measures to radians
-        obj.d_angle_unit = 'Radian';
-%         obj.convertToRadian();
+        obj.d_angle_unit = 'Radians';
+        obj.convertToRadian();
+        [obj.elements.angle_unit] = deal('Radians');
       end
     end
     
     function set.scale(obj,val)
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'linear',1) && ~strncmpi(obj.scale,'Linear',1)
+      if strncmpi(val,'Linear',1) && ~strncmpi(obj.scale,'Linear',1)
         % Change all voltage/power quantities to linear scale
-        obj.convertToLinear();
         obj.d_scale = 'Linear';
+        obj.convertToLinear();
+        % Also update the individual element objects
+        [obj.elements.scale] = deal('Linear');
+        
       elseif strncmpi(val,'db',1) && ~strncmpi(obj.scale,'dB',1)
         % Change all voltage/power quantities to dB scale
         obj.convertTodB();
         obj.d_scale = 'dB';
+        % Also update the individual element objects
+        [obj.elements.scale] = deal('dB');
       end
     end
     
     function set.elements(obj,val)
+      validateattributes(val, {'Antenna'}, {})
       obj.d_elements = val;
     end
     
     function set.center_freq(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_center_freq = val;
       obj.d_wavelength = obj.const.c/val;
     end
     
     function set.wavelength(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_wavelength = val;
-      obj.d_center_freq = obj.const.c/obj.wavelength;
+      obj.d_center_freq = obj.const.c/val;
     end
     
   end
@@ -101,12 +113,15 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
     
     % Convert all parameters that are currently in linear units to dB
     function convertTodB(obj)
+      
       for ii = 1:numel(obj.power_quantities)
         obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
       end
+      
       for ii = 1:numel(obj.voltage_quantities)
         obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
       end
+      
     end
     
     % Convert all parameters that are currently in dB to linear units
@@ -118,6 +133,24 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
       
       for ii = 1:numel(obj.voltage_quantities)
         obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
+      end
+      
+    end
+    
+    % Convert all angle measures to degree
+    function convertToDegree(obj)
+      
+      for ii = 1:numel(obj.angle_quantities)
+        obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
+      end
+      
+    end
+    
+    % Convert all angle measures to radians
+    function convertToRadian(obj)
+      
+      for ii = 1:numel(obj.angle_quantities)
+        obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
       end
       
     end

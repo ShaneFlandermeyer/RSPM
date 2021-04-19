@@ -41,35 +41,40 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   methods
     
     function set.num_pulses(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_num_pulses = val;
+      
     end
     
     function set.prf(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_prf = val;
       obj.d_pri = 1 / obj.d_prf;
+      
     end
     
     function set.pri(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_pri = val;
       obj.d_prf = 1 / obj.d_pri;
+      
     end
     
     function set.waveform(obj,val)
-      if (isa(val,'Waveform'))
-        obj.d_waveform = val;
-      else
-        error('Must be derived from a Waveform object')
-      end
+      
+      validateattributes(val,{'Waveform'},{});
+       obj.d_waveform = val;
+       
     end
     
     function set.antenna(obj,val)
-      if (isa(val,'Antenna') || isa(val,'AntennaArray'))
-        obj.d_antenna = val;
-      else
-        error('Must be derived from an Antenna or AntennaArray object')
-      end
+      
+      validateattributes(val,{'Antenna','AntennaArray'},{});
+      obj.d_antenna = val;
+      
     end
     
   end
@@ -113,7 +118,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     
     function out = get.velocity_unambig(obj)
       % Calculate the unambiguous velocity
-      out = obj.antenna.wavelength*obj.prf/4;
+      out = obj.wavelength*obj.prf/4;
     end
   end
   
@@ -127,15 +132,42 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       if (~isa(obj.antenna,'AntennaArray'))
         error('This function currently only supports AntennaArray objects')
       end
+      
+      was_db = false;
+      if strcmpi(obj.scale,'dB')
+        was_db = true;
+        obj.scale = 'Linear';
+      end
+      
+      was_degrees = false;
+      if strcmpi(obj.antenna.angle_unit,'Degrees')
+        was_degrees = true;
+        obj.antenna.angle_unit = 'Radians';
+      end 
+      
       AF = obj.antenna.arrayFactor(angle);
-      Gt = 10^(obj.antenna.gain_tx/10)*(abs(AF).^2).*...
+      Gt = obj.antenna.gain_tx*(abs(AF).^2).*...
         obj.antenna.elements(1,1).normPowerGain(angle);
-      g = 10^(obj.antenna.gain_element/10).*...
-        10^(obj.antenna.gain_rx/10)*obj.antenna.elements(1,1).normPowerGain(angle);
+      g = obj.antenna.gain_element*obj.antenna.gain_rx*...
+        obj.antenna.elements(1,1).normPowerGain(angle);
+%       Gt = 10^(obj.antenna.gain_tx/10)*(abs(AF).^2).*...
+%         obj.antenna.elements(1,1).normPowerGain(angle);
+%       g = 10^(obj.antenna.gain_element/10).*...
+%         10^(obj.antenna.gain_rx/10)*obj.antenna.elements(1,1).normPowerGain(angle);
       sigma = clutter.patchRCS(obj,range);
       
       cnr = obj.power_tx*Gt.*g*obj.wavelength^2*sigma/((4*pi)^3*...
         obj.power_noise*obj.loss_system*range^4);
+      
+      if was_degrees
+        obj.antenna.angle_unit = 'Degrees';
+      end
+      
+      
+      if was_db
+        obj.scale = 'db';
+        cnr = 10*log10(cnr);
+      end
     end
     
     function range = measuredRange(obj,targets)
@@ -219,7 +251,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       pos_matrix = [targets.position]';
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
       % Convert to degree if necessary
-      if strncmpi(obj.antenna.angle_unit,'Degree',1)
+      if strncmpi(obj.antenna.angle_unit,'Degrees',1)
         az = (180/pi)*az;
         el = (180/pi)*el;
       end

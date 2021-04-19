@@ -35,13 +35,13 @@ classdef CosineAntenna < Antenna
         was_db = true;
       end
       
-      if strncmpi(obj.angle_unit,'Radian',1)
-        % Radian angles
+      if strncmpi(obj.angle_unit,'Radians',1)
+        % Radians angles
         gain = abs(cos(az).*cos(el));
         % If the angle is in the backlobe, attenuate it
         gain(abs(az) >= pi/2) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= pi/2);
       else
-        % Degree angles
+        % Degrees angles
         gain = abs(cosd(az).*cosd(el));
         % If the angle is in the backlobe, attenuate it
         gain(abs(az) >= 90) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= 90);

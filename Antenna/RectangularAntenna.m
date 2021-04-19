@@ -5,12 +5,12 @@ classdef RectangularAntenna < Antenna
   
   % Public API
   properties (Dependent)
-    width; % Width of the antenna aperture
-    height; % Height of the antenna aperture
-    area;
-    beamwidth_azimuth_3db;
-    beamwidth_elevation_3db;
-    power_gain;
+    width;                   % Width of the antenna aperture
+    height;                  % Height of the antenna aperture
+    area;                    % Aperture area
+    beamwidth_azimuth_3db;   % 3db beamwidth in azimuth
+    beamwidth_elevation_3db; % 3db beamwidth in elevation
+    power_gain;              % Power gain
   end
   
   % Properties that store the data
@@ -51,20 +51,20 @@ classdef RectangularAntenna < Antenna
     
     function beamwidth = get.beamwidth_azimuth_3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.width;
-      if (strncmpi(obj.angle_unit,'Degree',1))
+      if (strncmpi(obj.angle_unit,'Degrees',1))
         beamwidth = (180/pi)*beamwidth;
       end
     end
     
     function beamwidth = get.beamwidth_elevation_3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.height;
-      if (strncmpi(obj.angle_unit,'Degree',1))
+      if (strncmpi(obj.angle_unit,'Degrees',1))
         beamwidth = (180/pi)*beamwidth;
       end
     end
     
     function gain = get.power_gain(obj)
-      if strncmpi(obj.angle_unit,'Degree',1)
+      if strncmpi(obj.angle_unit,'Degrees',1)
         gain = 26e3/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
       else
         gain = 7.9/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
@@ -98,7 +98,7 @@ classdef RectangularAntenna < Antenna
         was_db = true;
       end
         
-      if strncmpi(obj.angle_unit,'Radian',1)
+      if strncmpi(obj.angle_unit,'Radians',1)
         % Get the separable azimuth component
         az_pattern = sinc(obj.width/obj.wavelength*sin(az));
         % Get the separable elevation component

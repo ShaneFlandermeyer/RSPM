@@ -54,16 +54,16 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
     function testBeamwidthAz3dB(testCase)
       % Test azimuth 3db beamwidth calculation
       
-      % Radian mode
+      % Radians mode
       % -----------------------------------------------------------------
-      testCase.antenna.angle_unit = 'Radian';
+      testCase.antenna.angle_unit = 'Radians';
       expected = 0.0593;
       actual = testCase.antenna.beamwidth_azimuth_3db;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
-      % Degree mode
+      % Degrees mode
       % -----------------------------------------------------------------
-      testCase.antenna.angle_unit = 'Degree';
+      testCase.antenna.angle_unit = 'Degrees';
       expected = expected * (180/pi);
       actual = testCase.antenna.beamwidth_azimuth_3db;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
@@ -72,16 +72,16 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
     function testBeamwidthEl3dB(testCase)
       % Test elevation 3db beamwidth calculation
       
-      % Radian mode
+      % Radians mode
       % -----------------------------------------------------------------
-      testCase.antenna.angle_unit = 'Radian';
+      testCase.antenna.angle_unit = 'Radians';
       expected = 0.0593;
       actual = testCase.antenna.beamwidth_elevation_3db;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
-      % Degree mode
+      % Degrees mode
       % -----------------------------------------------------------------
-      testCase.antenna.angle_unit = 'Degree';
+      testCase.antenna.angle_unit = 'Degrees';
       expected = expected * (180/pi);
       actual = testCase.antenna.beamwidth_elevation_3db;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
@@ -93,15 +93,15 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
       % Linear mode
       % -----------------------------------------------------------------
       testCase.antenna.scale = 'linear';
-      % Radian mode
-      testCase.antenna.angle_unit = 'Radian';
+      % Radians mode
+      testCase.antenna.angle_unit = 'Radians';
       expected = 2.2471e3;
       actual = testCase.antenna.power_gain;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
-      % Degree mode
+      % Degrees mode
       % NOTE: The degree expression is just an approximation, so the
       % expected value differs from the true value above
-      testCase.antenna.angle_unit = 'Degree';
+      testCase.antenna.angle_unit = 'Degrees';
       expected = 2252.846;
       actual = testCase.antenna.power_gain;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
@@ -109,12 +109,12 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
       % dB mode
       % -----------------------------------------------------------------
       testCase.antenna.scale = 'dB';
-      testCase.antenna.angle_unit = 'Radian';
+      testCase.antenna.angle_unit = 'Radians';
       expected = 10*log10(2.2471e3);
       actual = testCase.antenna.power_gain;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
-      testCase.antenna.angle_unit = 'Degree';
+      testCase.antenna.angle_unit = 'Degrees';
       expected = 10*log10(2252.846);
       actual = testCase.antenna.power_gain;
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
@@ -130,16 +130,16 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
       % -----------------------------------------------------------------
       testCase.antenna.scale = 'linear';
       
-      % Test Radian mode
+      % Test Radians mode
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
-      testCase.antenna.angle_unit = 'Radian';
+      testCase.antenna.angle_unit = 'Radians';
       expected = [1;1;0.000894149];
       actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
       % Test degree mode
       az = (180/pi)*az; el = (180/pi)*el;
-      testCase.antenna.angle_unit = 'Degree';
+      testCase.antenna.angle_unit = 'Degrees';
       actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
@@ -147,16 +147,16 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
       % -----------------------------------------------------------------
       testCase.antenna.scale = 'dB';
       
-      % Test Radian mode
+      % Test Radians mode
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
-      testCase.antenna.angle_unit = 'Radian';
+      testCase.antenna.angle_unit = 'Radians';
       expected = 10*log10([1;1;0.000894149]);
       actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
       
       % Test degree mode
       az = (180/pi)*az; el = (180/pi)*el;
-      testCase.antenna.angle_unit = 'Degree';
+      testCase.antenna.angle_unit = 'Degrees';
       actual = testCase.antenna.normVoltageGain(az,el);
       testCase.verifyEqual(actual,expected,'RelTol',1e-3)
 

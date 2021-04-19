@@ -1,16 +1,17 @@
 % A class representing a linear antenna array
 
 classdef LinearArray < AntennaArray
+  
   properties (Dependent)
     num_element; % Number of array elements
-    element_pattern;   % Element beampattern
-    gain_element;      % Element Gain
-    spacing_element;   % Element spacing
-    angle_steering;    % Steering angle
-    gain_tx;           % Tx Gain
-    gain_rx;           % Rx Gain
-    mainbeam_direction;
-    array_normal;
+    element_pattern;    % Element beampattern
+    gain_element;       % Element Gain
+    spacing_element;    % Element spacing
+    angle_steering;     % Steering angle
+    gain_tx;            % Tx Gain
+    gain_rx;            % Rx Gain
+    mainbeam_direction; % Array mainbeam unit vector
+    array_normal;       % Array normal direction unit vector
   end
   
   properties (Access = protected)
@@ -18,81 +19,140 @@ classdef LinearArray < AntennaArray
     d_element_pattern = 'Cosine';
     d_gain_element;
     d_spacing_element;
-    d_angle_steering;
+    d_angle_steering = 0;
     d_gain_tx;
     d_gain_rx;
-    d_mainbeam_direction;
+    d_mainbeam_direction = [1;0;0];
     d_array_normal = [1;0;0];
+  end
+  
+  %% Constructors
+  methods
+    
+    function obj = LinearArray()
+      % Default Constructor
+      
+      % Add quantities that need to be converted when we change the scale
+      % (linear <-> dB) or the angle unit (degree<->radian)
+      obj.power_quantities = [obj.power_quantities];
+      obj.voltage_quantities = [obj.voltage_quantities];
+      obj.angle_quantities = [obj.angle_quantities;{'angle_steering'}];
+    end
+    
   end
   
   %% Public Methods
   methods (Access = public)
     function AF = arrayFactor(obj,angle)
-      AF = zeros(length(angle),1);
-      if strcmpi(obj.angle_unit,'Radian')
-        for ii = 1:length(angle)
-          AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
-            (0:obj.num_element-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
-        end
-      else
-        for ii = 1:length(angle)
-          AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
-            (0:obj.num_element-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
-        end
+      
+      % Convert everything to radians before doing the calculation
+      was_degrees = false;
+      if strcmpi(obj.angle_unit,'Degrees')
+        was_degrees = true;
+        angle = (pi/180)*angle;
+        obj.angle_unit = 'Radians';
       end
+      
+      % Calculate the array factor for each input angle
+      AF = zeros(length(angle),1);
+      for ii = 1:length(angle)
+        AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
+          (0:obj.num_element-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
+      end
+      
+      % Convert back to degrees if necessary
+      if was_degrees
+        obj.angle_unit = 'Degrees';
+      end
+      
+      % Convert to dB if necessary
       if strcmpi(obj.scale,'dB')
         AF = 10*log10(AF);
       end
+      
     end
+    
   end
   %% Setter Methods
   methods
     
     function set.array_normal(obj,val)
-      obj.array_normal = val;
+      validateattributes(val,{'numeric'},{'3d'})
+      % Make it a column vector
+      if isrow(val)
+        val = val.';
+      end
+      obj.array_normal = val./norm(val);
     end
     
     function set.mainbeam_direction(obj,val)
-      obj.d_mainbeam_direction = val;
+      validateattributes(val,{'numeric'},{'3d'})
+      % Make it a column vector
+      if isrow(val)
+        val = val.';
+      end
+      obj.d_mainbeam_direction = val./norm(val);
       obj.d_angle_steering = -atan2d(val(1)*obj.array_normal(2)-...
         obj.array_normal(1)*val(2),val(1)*val(2)+obj.array_normal(1)*obj.array_normal(2));
     end
     
     function set.gain_tx(obj,val)
+      validateattributes(val,{'numeric'},{'finite','nonnan'})
       obj.d_gain_tx = val;
     end
     
     function set.gain_rx(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan'})
       obj.d_gain_rx = val;
+     
     end
     
     function set.angle_steering(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_angle_steering = val;
-      R = [cosd(val) -sind(val) 0;
-           sind(val)  cos(val)  0;
-               0         0      1];
+      if strcmpi(obj.angle_unit,'Radians')
+        R = YPRMatrix(obj.d_angle_steering);
+      else
+        R = YPRMatrix(obj.d_angle_steering,[],[],'Degrees');
+      end
       obj.d_mainbeam_direction = R*obj.array_normal;
+      
     end
     
     function set.spacing_element(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan'})
       obj.d_spacing_element = val;
+      
     end
     
     function set.num_element(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'})
       obj.d_num_element = val;
+      
     end
     
     function set.element_pattern(obj,val)
+      
       validateattributes(val,{'string','char'},{});
       obj.d_element_pattern = val;
       switch obj.d_element_pattern
         case 'Cosine'
           obj.elements = CosineAntenna([obj.num_element,1]);
+        otherwise
+          error('Element pattern not supported')
       end
+      
     end
     
     function set.gain_element(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan'})
       obj.d_gain_element = val;
+      
     end
     
   end

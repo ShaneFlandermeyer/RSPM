@@ -51,45 +51,71 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   methods
     
     function set.power_tx(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan'});
       obj.d_power_tx = val;
     end
     
     function set.position(obj,val)
+      
+      validateattributes(val,{'numeric'},{'3d'})
+      % Make it a column vector
+      if isrow(val)
+        val = val.';
+      end
       obj.d_position = val;
+      
     end
     
     function set.velocity(obj,val)
+      
+      validateattributes(val,{'numeric'},{'3d'})
+      % Make it a column vector
+      if isrow(val)
+        val = val.';
+      end
       obj.d_velocity = val;
+      
     end
     
     function set.center_freq(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_center_freq = val;
       obj.d_wavelength = obj.const.c/val;
       if isprop(obj,'antenna') && ~isempty(obj.antenna)
         obj.antenna.center_freq = val;
       end
+      
     end
     
     function set.wavelength(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_wavelength = val;
       obj.d_center_freq = obj.const.c/val;
       if (isprop(obj,'antenna')) && ~isempty(obj.antenna)
         obj.antenna.wavelength = val;
       end
+      
     end
 
     function set.noise_fig(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan'});
       obj.d_noise_fig = val;
+
     end
 
     function set.loss_system(obj,val)
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan'});
       obj.d_loss_system = val;
+      
     end
    
     function set.scale(obj,val)
+      
       validateattributes(val,{'string','char'},{});
       if strncmpi(val,'Linear',1)
         obj.d_scale = 'Linear';
@@ -105,23 +131,37 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
           obj.(props{ii}).scale = val;
         end
       end
+      
     end
  
     function set.temperature_noise(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_temperature_noise = val;
+      
     end
    
     function set.bandwidth(obj,val)
+      
       obj.d_bandwidth = val;
+      % Make this the sample rate for any waveform object we may be using
       if isprop(obj,'waveform') && ~isempty(obj.waveform)
         obj.waveform.samp_rate = val;
       end
+      
     end
     
   end
   %% Getter methods
   methods
+    
+    function out = get.center_freq(obj)
+      out = obj.d_center_freq;
+    end
+    
+    function out = get.wavelength(obj)
+      out = obj.d_wavelength;
+    end
     
     function out = get.power_tx(obj)
       out = obj.d_power_tx;
@@ -133,14 +173,6 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     
     function out = get.velocity(obj)
       out = obj.d_velocity;
-    end
-    
-    function out = get.center_freq(obj)
-      out = obj.d_center_freq;
-    end
-    
-    function out = get.wavelength(obj)
-      out = obj.d_wavelength;
     end
     
     function power = get.power_noise(obj)

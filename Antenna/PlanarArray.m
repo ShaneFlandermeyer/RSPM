@@ -1,5 +1,6 @@
 % Class Representation of a rectangular array aperture
 %
+% NOT USED FOR FINAL PROJECT. DOESN'T WORK AND ISN'T NEEDED RIGHT NOW!!!
 % Blame: Shane Flandermeyer
 %
 % TODO:
