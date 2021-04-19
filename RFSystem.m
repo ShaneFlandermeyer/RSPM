@@ -21,6 +21,7 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   % Class members exposed to the outside world
   properties (Dependent)
     power_noise;       % Noise power 
+    power_tx;          % PEAK transmit power
     scale;             % Specifies if the units are linear or in dB
     loss_system;       % System loss factor
     noise_fig;         % System noise figure
@@ -34,10 +35,6 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   
   % Internally stored class members
   properties (Access = protected)
-  end
-  
-  % Internally stored class members
-  properties (Access = private)
     d_scale = 'dB';
     d_loss_system;
     d_noise_fig;
@@ -47,10 +44,15 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     d_wavelength;
     d_position;
     d_velocity;
+    d_power_tx;
   end
   
   %% Setter Methods
   methods
+    
+    function set.power_tx(obj,val)
+      obj.d_power_tx = val;
+    end
     
     function set.position(obj,val)
       obj.d_position = val;
@@ -120,6 +122,10 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
   end
   %% Getter methods
   methods
+    
+    function out = get.power_tx(obj)
+      out = obj.d_power_tx;
+    end
     
     function out = get.position(obj)
       out = obj.d_position;

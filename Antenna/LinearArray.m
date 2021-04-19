@@ -9,42 +9,53 @@ classdef LinearArray < AntennaArray
     angle_steering;    % Steering angle
     gain_tx;           % Tx Gain
     gain_rx;           % Rx Gain
-    gain_tx_array;     % Full array Tx gain
-    gain_rx_array;     % Full array Rx gain
+    mainbeam_direction;
+    array_normal;
   end
   
   properties (Access = protected)
     d_num_element;
-    d_element_pattern;
+    d_element_pattern = 'Cosine';
     d_gain_element;
     d_spacing_element;
     d_angle_steering;
     d_gain_tx;
     d_gain_rx;
-    d_gain_tx_array;
-    d_gain_rx_array;
+    d_mainbeam_direction;
+    d_array_normal = [1;0;0];
   end
   
   %% Public Methods
   methods (Access = public)
     function AF = arrayFactor(obj,angle)
-      % Compute the array factor for the 
       AF = zeros(length(angle),1);
-      for ii = 1:length(angle)
-        AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
-          (0:obj.num_element-1)*(sind(angle(ii)) - sind(obj.angle_steering))));
+      if strcmpi(obj.angle_unit,'Radian')
+        for ii = 1:length(angle)
+          AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
+            (0:obj.num_element-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
+        end
+      else
+        for ii = 1:length(angle)
+          AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
+            (0:obj.num_element-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
+        end
+      end
+      if strcmpi(obj.scale,'dB')
+        AF = 10*log10(AF);
       end
     end
   end
   %% Setter Methods
   methods
     
-    function set.gain_tx_array(obj,val)
-      obj.d_gain_tx_array = val;
+    function set.array_normal(obj,val)
+      obj.array_normal = val;
     end
     
-    function set.gain_rx_array(obj,val)
-      obj.d_gain_rx_array = val;
+    function set.mainbeam_direction(obj,val)
+      obj.d_mainbeam_direction = val;
+      obj.d_angle_steering = -atan2d(val(1)*obj.array_normal(2)-...
+        obj.array_normal(1)*val(2),val(1)*val(2)+obj.array_normal(1)*obj.array_normal(2));
     end
     
     function set.gain_tx(obj,val)
@@ -57,6 +68,10 @@ classdef LinearArray < AntennaArray
     
     function set.angle_steering(obj,val)
       obj.d_angle_steering = val;
+      R = [cosd(val) -sind(val) 0;
+           sind(val)  cos(val)  0;
+               0         0      1];
+      obj.d_mainbeam_direction = R*obj.array_normal;
     end
     
     function set.spacing_element(obj,val)
@@ -84,12 +99,12 @@ classdef LinearArray < AntennaArray
   %% Getter Methods
   methods
     
-    function out = get.gain_tx_array(obj)
-      out = obj.d_gain_tx_array;
+    function out = get.array_normal(obj)
+      out = obj.d_array_normal;
     end
     
-    function out = get.gain_rx_array(obj)
-      out = obj.d_gain_rx_array;
+    function out = get.mainbeam_direction(obj)
+      out = obj.d_mainbeam_direction;
     end
     
     function out = get.gain_tx(obj)

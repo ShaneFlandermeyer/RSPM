@@ -35,7 +35,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     d_pri;
     d_num_pulses;
   end
-
+  
   
   %% Setter Methods
   methods
@@ -71,11 +71,11 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
         error('Must be derived from an Antenna or AntennaArray object')
       end
     end
-        
+    
   end
   
   %% Getter Methods
-  methods   
+  methods
     
     function out = get.range_resolution(obj)
       out = obj.const.c/2/obj.bandwidth;
@@ -105,8 +105,8 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       % Calculate the unambiguous doppler
       out = obj.prf/2;
     end
-   
-    function out = get.range_unambig(obj) 
+    
+    function out = get.range_unambig(obj)
       % Calculate the unambiguous range
       out = obj.const.c*obj.pri/2;
     end
@@ -119,6 +119,24 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   
   %% Public Methods
   methods
+    
+    function cnr = CNR(obj,clutter,angle,range)
+      % Calculates the clutter-to-noise ratio for the given clutter at the
+      % given range and angles
+      
+      if (~isa(obj.antenna,'AntennaArray'))
+        error('This function currently only supports AntennaArray objects')
+      end
+      AF = obj.antenna.arrayFactor(angle);
+      Gt = 10^(obj.antenna.gain_tx/10)*(abs(AF).^2).*...
+        obj.antenna.elements(1,1).normPowerGain(angle);
+      g = 10^(obj.antenna.gain_element/10).*...
+        10^(obj.antenna.gain_rx/10)*obj.antenna.elements(1,1).normPowerGain(angle);
+      sigma = clutter.patchRCS(obj,range);
+      
+      cnr = obj.power_tx*Gt.*g*obj.wavelength^2*sigma/((4*pi)^3*...
+        obj.power_noise*obj.loss_system*range^4);
+    end
     
     function range = measuredRange(obj,targets)
       % For each target in the list, calculate the range measured by the

@@ -43,7 +43,7 @@ This function calls:
 <li><a href="Antenna.html" class="code" title="">Antenna</a>	A class representing an antenna.</li></ul>
 This function is called by:
 <ul style="list-style-image:url(../../matlabicon.gif)">
-<li><a href="Antenna.html" class="code" title="">Antenna</a>	A class representing an antenna.</li><li><a href="CosineAntennaElement.html" class="code" title="">CosineAntennaElement</a>	A class representation of an antenna element with a 2D cosine beampattern</li><li><a href="RectangularElement.html" class="code" title="">RectangularElement</a>	A class representing a rectangular aperture antenna</li></ul>
+<li><a href="Antenna.html" class="code" title="">Antenna</a>	A class representing an antenna.</li><li><a href="CosineAntenna.html" class="code" title="">CosineAntenna</a>	A class representation of an antenna element with a 2D cosine beampattern</li><li><a href="RectangularAntenna.html" class="code" title="">RectangularAntenna</a>	A class representing a rectangular aperture antenna</li></ul>
 <!-- crossreference -->
 
 <h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
@@ -73,7 +73,7 @@ This function is called by:
 0020   <a href="#_sub27" class="code" title="subfunction value = properties( obj )">properties</a> (Access = private)
 0021     <span class="comment">% A list of antenna parameters that are angles, used when switching</span>
 0022     <span class="comment">% between radian mode and degree mode</span>
-0023     angle_params = {<span class="string">'azimuth'</span>,<span class="string">'elevation'</span>};
+0023     angle_quantities = {<span class="string">'azimuth'</span>,<span class="string">'elevation'</span>};
 0024     power_quantities = {<span class="string">'backlobe_attenuation'</span>};
 0025     voltage_quantities = {};
 0026   <span class="keyword">end</span>
@@ -301,15 +301,15 @@ This function is called by:
 0248     
 0249     <span class="comment">% Convert all angle measures to degree</span>
 0250     <a name="_sub24" href="#_subfunctions" class="code">function convertToDegree(obj)</a>
-0251       <span class="keyword">for</span> ii = 1:numel(obj.angle_params)
-0252         obj.(obj.angle_params{ii}) = (180/pi)*obj.(obj.angle_params{ii});
+0251       <span class="keyword">for</span> ii = 1:numel(obj.angle_quantities)
+0252         obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
 0253       <span class="keyword">end</span>
 0254     <span class="keyword">end</span>
 0255     
 0256     <span class="comment">% Convert all angle measures to radians</span>
 0257     <a name="_sub25" href="#_subfunctions" class="code">function convertToRadian(obj)</a>
-0258       <span class="keyword">for</span> ii = 1:numel(obj.angle_params)
-0259         obj.(obj.angle_params{ii}) = (pi/180)*obj.(obj.angle_params{ii});
+0258       <span class="keyword">for</span> ii = 1:numel(obj.angle_quantities)
+0259         obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
 0260       <span class="keyword">end</span>
 0261     <span class="keyword">end</span>
 0262     
@@ -344,6 +344,6 @@ This function is called by:
 0291   <span class="keyword">end</span>
 0292   
 0293 <span class="keyword">end</span> <span class="comment">% class</span></pre></div>
-<hr><address>Generated on Sun 18-Apr-2021 10:32:45 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+<hr><address>Generated on Sun 18-Apr-2021 20:02:12 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
 </body>
 </html>

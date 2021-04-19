@@ -41,48 +41,132 @@ This function is called by:
 
 <h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
 <ul style="list-style-image:url(../../matlabicon.gif)">
-<li><a href="#_sub1" class="code">function value = properties( obj )</a></li><li><a href="#_sub2" class="code">function value = fieldnames( obj )</a></li><li><a href="#_sub3" class="code">function group = getPropertyGroups( obj )</a></li></ul>
+<li><a href="#_sub1" class="code">function set.angle_unit(obj,val)</a></li><li><a href="#_sub2" class="code">function set.scale(obj,val)</a></li><li><a href="#_sub3" class="code">function set.elements(obj,val)</a></li><li><a href="#_sub4" class="code">function set.center_freq(obj,val)</a></li><li><a href="#_sub5" class="code">function set.wavelength(obj,val)</a></li><li><a href="#_sub6" class="code">function out = get.angle_unit(obj)</a></li><li><a href="#_sub7" class="code">function out = get.scale(obj)</a></li><li><a href="#_sub8" class="code">function out = get.elements(obj)</a></li><li><a href="#_sub9" class="code">function out = get.center_freq(obj)</a></li><li><a href="#_sub10" class="code">function out = get.wavelength(obj)</a></li><li><a href="#_sub11" class="code">function value = properties( obj )</a></li><li><a href="#_sub12" class="code">function value = fieldnames( obj )</a></li><li><a href="#_sub13" class="code">function group = getPropertyGroups( obj )</a></li></ul>
 
 <h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../../up.png"></a></h2>
 <div class="fragment"><pre>0001 <span class="comment">% An abstract class representing an antenna array</span>
 0002 
 0003 classdef (Abstract) <a href="AntennaArray.html" class="code" title="">AntennaArray</a> &lt; matlab.mixin.Copyable &amp; matlab.mixin.CustomDisplay
 0004   
-0005   <a href="#_sub1" class="code" title="subfunction value = properties( obj )">properties</a> (Dependent)
-0006   <span class="keyword">end</span>
-0007   
-0008   <a href="#_sub1" class="code" title="subfunction value = properties( obj )">properties</a> (Access = protected)
-0009   <span class="keyword">end</span>
-0010   
-0011   <span class="comment">%% Hidden Methods</span>
-0012   methods (Hidden)
-0013     <span class="comment">% Sort the object properties alphabetically</span>
-0014     <a name="_sub0" href="#_subfunctions" class="code">function value = properties( obj )</a>
-0015       <span class="comment">% Put the properties list in sorted order</span>
-0016       propList = sort( builtin(&quot;<a href="#_sub1" class="code" title="subfunction value = properties( obj )">properties</a>&quot;, obj) );
-0017       <span class="comment">% Move any control switch parameters to the top of the output</span>
-0018       switches = {<span class="string">'scale'</span>,<span class="string">'angle_unit'</span>}';
-0019       propList(ismember(propList,switches)) = [];
-0020       propList = cat(1,switches,propList);
-0021       <span class="keyword">if</span> nargout == 0
-0022         disp(propList);
-0023       <span class="keyword">else</span>
-0024         value = propList;
-0025       <span class="keyword">end</span>
-0026     <span class="keyword">end</span>
-0027     <span class="comment">% Sort the object field names alphabetically</span>
-0028     <a name="_sub1" href="#_subfunctions" class="code">function value = fieldnames( obj )</a>
-0029       value = sort( builtin( &quot;<a href="#_sub2" class="code" title="subfunction value = fieldnames( obj )">fieldnames</a>&quot;, obj ) );
-0030     <span class="keyword">end</span>
-0031   <span class="keyword">end</span>
-0032   methods (Access = protected)
-0033     <a name="_sub2" href="#_subfunctions" class="code">function group = getPropertyGroups( obj )</a>
-0034       props = <a href="#_sub1" class="code" title="subfunction value = properties( obj )">properties</a>( obj );
-0035       group = matlab.mixin.util.PropertyGroup( props );
-0036     <span class="keyword">end</span>
-0037   <span class="keyword">end</span>
-0038   
-0039 <span class="keyword">end</span></pre></div>
-<hr><address>Generated on Sun 18-Apr-2021 10:32:45 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
+0005   <a href="#_sub11" class="code" title="subfunction value = properties( obj )">properties</a> (Constant, Access = protected)
+0006     const = struct(<span class="string">'c'</span>,299792458)
+0007   <span class="keyword">end</span>
+0008   
+0009   <a href="#_sub11" class="code" title="subfunction value = properties( obj )">properties</a> (Dependent)
+0010     angle_unit;
+0011     scale;
+0012     elements;
+0013     center_freq;
+0014     wavelength;
+0015   <span class="keyword">end</span>
+0016   
+0017   <a href="#_sub11" class="code" title="subfunction value = properties( obj )">properties</a> (Access = protected)
+0018     d_angle_unit = <span class="string">'Radian'</span>;
+0019     d_scale = <span class="string">'dB'</span>;
+0020     d_elements;
+0021     d_center_freq;
+0022     d_wavelength;
+0023   <span class="keyword">end</span>
+0024   <span class="comment">%% Setter Methods</span>
+0025   
+0026   methods 
+0027     
+0028     <a name="_sub0" href="#_subfunctions" class="code">function set.angle_unit(obj,val)</a>
+0029       validateattributes(val,{<span class="string">'string'</span>,<span class="string">'char'</span>},{});
+0030       <span class="keyword">if</span> strncmpi(val,<span class="string">'Degree'</span>,1)
+0031         <span class="comment">% Convert angle measures to degree</span>
+0032         obj.d_angle_unit = <span class="string">'Degree'</span>;
+0033 <span class="comment">%         obj.convertToDegree();</span>
+0034       <span class="keyword">elseif</span> strncmpi(val,<span class="string">'Radian'</span>,1)
+0035         <span class="comment">% Convert angle measures to radians</span>
+0036         obj.d_angle_unit = <span class="string">'Radian'</span>;
+0037 <span class="comment">%         obj.convertToRadian();</span>
+0038       <span class="keyword">end</span>
+0039     <span class="keyword">end</span>
+0040     
+0041     <a name="_sub1" href="#_subfunctions" class="code">function set.scale(obj,val)</a>
+0042       validateattributes(val,{<span class="string">'string'</span>,<span class="string">'char'</span>},{});
+0043       <span class="keyword">if</span> strncmpi(val,<span class="string">'linear'</span>,1) &amp;&amp; ~strncmpi(obj.scale,<span class="string">'Linear'</span>,1)
+0044         <span class="comment">% Change all voltage/power quantities to linear scale</span>
+0045 <span class="comment">%         obj.convertToLinear();</span>
+0046         obj.d_scale = <span class="string">'Linear'</span>;
+0047       <span class="keyword">elseif</span> strncmpi(val,<span class="string">'db'</span>,1) &amp;&amp; ~strncmpi(obj.scale,<span class="string">'dB'</span>,1)
+0048         <span class="comment">% Change all voltage/power quantities to dB scale</span>
+0049 <span class="comment">%         obj.convertTodB();</span>
+0050         obj.d_scale = <span class="string">'dB'</span>;
+0051       <span class="keyword">end</span>
+0052     <span class="keyword">end</span>
+0053     
+0054     <a name="_sub2" href="#_subfunctions" class="code">function set.elements(obj,val)</a>
+0055       obj.d_elements = val;
+0056     <span class="keyword">end</span>
+0057     
+0058     <a name="_sub3" href="#_subfunctions" class="code">function set.center_freq(obj,val)</a>
+0059       obj.d_center_freq = val;
+0060       obj.d_wavelength = obj.const.c/val;
+0061     <span class="keyword">end</span>
+0062     
+0063     <a name="_sub4" href="#_subfunctions" class="code">function set.wavelength(obj,val)</a>
+0064       obj.d_wavelength = val;
+0065       obj.d_center_freq = obj.const.c/obj.wavelength;
+0066     <span class="keyword">end</span>
+0067     
+0068   <span class="keyword">end</span>
+0069   
+0070   <span class="comment">%% Getter Methods</span>
+0071   methods
+0072     
+0073     <a name="_sub5" href="#_subfunctions" class="code">function out = get.angle_unit(obj)</a>
+0074       out = obj.d_angle_unit;
+0075     <span class="keyword">end</span>
+0076     
+0077     <a name="_sub6" href="#_subfunctions" class="code">function out = get.scale(obj)</a>
+0078       out = obj.d_scale;
+0079     <span class="keyword">end</span>
+0080     
+0081     <a name="_sub7" href="#_subfunctions" class="code">function out = get.elements(obj)</a>
+0082       out = obj.d_elements;
+0083     <span class="keyword">end</span>
+0084     
+0085     <a name="_sub8" href="#_subfunctions" class="code">function out = get.center_freq(obj)</a>
+0086       out = obj.d_center_freq;
+0087     <span class="keyword">end</span>
+0088     
+0089     <a name="_sub9" href="#_subfunctions" class="code">function out = get.wavelength(obj)</a>
+0090       out = obj.d_wavelength;
+0091     <span class="keyword">end</span>
+0092     
+0093   <span class="keyword">end</span>
+0094   
+0095   <span class="comment">%% Hidden Methods</span>
+0096   methods (Hidden)
+0097     <span class="comment">% Sort the object properties alphabetically</span>
+0098     <a name="_sub10" href="#_subfunctions" class="code">function value = properties( obj )</a>
+0099       <span class="comment">% Put the properties list in sorted order</span>
+0100       propList = sort( builtin(&quot;<a href="#_sub11" class="code" title="subfunction value = properties( obj )">properties</a>&quot;, obj) );
+0101       <span class="comment">% Move any control switch parameters to the top of the output</span>
+0102       switches = {<span class="string">'angle_unit'</span>,<span class="string">'element_pattern'</span>,<span class="string">'scale'</span>}';
+0103       propList(ismember(propList,switches)) = [];
+0104       propList = cat(1,switches,propList);
+0105       <span class="keyword">if</span> nargout == 0
+0106         disp(propList);
+0107       <span class="keyword">else</span>
+0108         value = propList;
+0109       <span class="keyword">end</span>
+0110     <span class="keyword">end</span>
+0111     <span class="comment">% Sort the object field names alphabetically</span>
+0112     <a name="_sub11" href="#_subfunctions" class="code">function value = fieldnames( obj )</a>
+0113       value = sort( builtin( &quot;<a href="#_sub12" class="code" title="subfunction value = fieldnames( obj )">fieldnames</a>&quot;, obj ) );
+0114     <span class="keyword">end</span>
+0115   <span class="keyword">end</span>
+0116   methods (Access = protected)
+0117     <a name="_sub12" href="#_subfunctions" class="code">function group = getPropertyGroups( obj )</a>
+0118       props = <a href="#_sub11" class="code" title="subfunction value = properties( obj )">properties</a>( obj );
+0119       group = matlab.mixin.util.PropertyGroup( props );
+0120     <span class="keyword">end</span>
+0121   <span class="keyword">end</span>
+0122   
+0123 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Sun 18-Apr-2021 20:02:12 by <strong><a href="https://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003-2019</address>
 </body>
 </html>

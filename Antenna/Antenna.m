@@ -20,7 +20,7 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   properties (Access = private)
     % A list of antenna parameters that are angles, used when switching
     % between radian mode and degree mode
-    angle_params = {'azimuth','elevation'};
+    angle_quantities = {'azimuth','elevation'};
     power_quantities = {'backlobe_attenuation'};
     voltage_quantities = {};
   end
@@ -248,15 +248,15 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     
     % Convert all angle measures to degree
     function convertToDegree(obj)
-      for ii = 1:numel(obj.angle_params)
-        obj.(obj.angle_params{ii}) = (180/pi)*obj.(obj.angle_params{ii});
+      for ii = 1:numel(obj.angle_quantities)
+        obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
       end
     end
     
     % Convert all angle measures to radians
     function convertToRadian(obj)
-      for ii = 1:numel(obj.angle_params)
-        obj.(obj.angle_params{ii}) = (pi/180)*obj.(obj.angle_params{ii});
+      for ii = 1:numel(obj.angle_quantities)
+        obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
       end
     end
     
