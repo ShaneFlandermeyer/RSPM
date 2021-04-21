@@ -1,5 +1,5 @@
 % Abstract Class representing clutter
-classdef (Abstract) Clutter < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
+classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   % Constant properties
   properties (Constant = true,Access = protected)
@@ -37,9 +37,9 @@ classdef (Abstract) Clutter < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
     function area = patchArea(obj,radar)
       % Calculate the area of each clutter patch at a given range ring
       
-      % Clutter patch azimuth width
+      % AbstractClutter patch azimuth width
       width_az = 2*pi/obj.num_patches;
-      % Clutter patch range extent
+      % AbstractClutter patch range extent
       width_range = radar.range_resolution;
       % Grazing/elevation angle for the FLAT EARTH case
       angle_graze = asin(radar.position(3)/obj.range);

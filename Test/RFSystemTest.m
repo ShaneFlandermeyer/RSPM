@@ -1,4 +1,4 @@
-classdef RFSystemTest < matlab.unittest.TestCase
+classdef AbstractRFSystemTest < matlab.unittest.TestCase
   
   methods(TestClassSetup)
     function [radar,targets] = setup(testCase)
@@ -11,7 +11,7 @@ classdef RFSystemTest < matlab.unittest.TestCase
       radar.loss_system = 3;           % System loss (dB)
       radar.noise_fig = 7;             % Noise figure (dB)
       radar.bandwidth = 5e6;           % Receiver bandwidth (Hz)
-      % Antenna Parameters
+      % AbstractAntenna Parameters
       radar.antenna.width = 1.5;   % Width of the aperture
       radar.antenna.height = 1.5;  % Height of the aperture
       radar.antenna.azimuth = 0;   % Azimuth pointing angle (theta_0)

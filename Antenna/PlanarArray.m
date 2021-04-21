@@ -6,7 +6,7 @@
 % TODO:
 %  - Add parameter for dB/linear scales
 %  - Add parameter for angle unit
-classdef PlanarArray < AntennaArray
+classdef PlanarArray < AbstractAntennaArray
   properties (Dependent)
     num_element_horiz; % Number of horizontal array elements
     num_element_vert;  % Number of vertical array elements

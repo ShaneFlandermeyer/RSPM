@@ -5,7 +5,7 @@
 % - Add multistatic capabilities
 %
 % Blame: Shane Flandermeyer
-classdef Radar < matlab.mixin.Copyable & RFSystem
+classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
   
   %% Private properties
   properties (Access = private)
@@ -16,7 +16,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   
   % Members exposed to the outside world
   properties (Dependent)
-    antenna;          % Antenna object
+    antenna;          % AbstractAntenna object
     waveform;         % Waveform object
     prf;              % Pulse repetition frequency (Hz)
     pri;              % Pulse repetition interval (s)
@@ -72,7 +72,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     
     function set.antenna(obj,val)
       
-      validateattributes(val,{'Antenna','AntennaArray'},{});
+      validateattributes(val,{'AbstractAntenna','AbstractAntennaArray'},{});
       obj.d_antenna = val;
       
     end
@@ -130,8 +130,8 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       % given range and angles
       
       % TODO: Only supports array objects for now
-      if (~isa(obj.antenna,'AntennaArray'))
-        error('This function currently only supports AntennaArray objects')
+      if (~isa(obj.antenna,'AbstractAntennaArray'))
+        error('This function currently only supports AbstractAntennaArray objects')
       end
       
       % Create a copy of the current object and change everything to
@@ -148,7 +148,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       % Fuull array receive gain
       g = radar.antenna.gain_element*radar.antenna.gain_rx*...
         radar.antenna.elements(1,1).normPowerGain(angle);
-      % Clutter RCS
+      % AbstractClutter RCS
       sigma = clutter.patchRCS(radar);
       
       % CNR 

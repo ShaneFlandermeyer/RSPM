@@ -2,7 +2,7 @@
 %
 % Blame: Shane Flandermeyer
 
-classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
+classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   %% Properties
   
@@ -61,7 +61,7 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   %% Constructors
   methods
     
-    function obj = Antenna(size)
+    function obj = AbstractAntenna(size)
       % Default constructor
       if (nargin > 0)
         % Output an array or matrix of antenna elements

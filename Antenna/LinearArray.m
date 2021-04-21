@@ -1,6 +1,6 @@
 % A class representing a linear antenna array
 
-classdef LinearArray < AntennaArray
+classdef LinearArray < AbstractAntennaArray
   
   properties (Dependent)
     num_element; % Number of array elements

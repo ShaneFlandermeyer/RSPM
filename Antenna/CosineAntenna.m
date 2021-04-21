@@ -1,6 +1,6 @@
 % A class representation of an antenna element with a 2D cosine beampattern
 
-classdef CosineAntenna < Antenna
+classdef CosineAntenna < AbstractAntenna
   
   properties
     

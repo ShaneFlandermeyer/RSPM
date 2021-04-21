@@ -8,7 +8,7 @@ classdef RectangularApertureTest < matlab.unittest.TestCase
   
   methods (TestMethodSetup)
     function setupAntenna(testCase)
-      % Set up the Antenna object
+      % Set up the AbstractAntenna object
       testCase.antenna = RectangularAperture;
       testCase.addTeardown(@RectangularAperture)
       testCase.antenna.center_freq = 3e9;

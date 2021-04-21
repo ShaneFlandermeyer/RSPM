@@ -2,7 +2,7 @@
 %
 % Blame: Shane Flandermeyer
 
-classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
+classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   %% Properties
   
   % Constants

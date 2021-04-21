@@ -1,6 +1,6 @@
 % An abstract class representing an antenna array
 
-classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
+classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   properties (Access = protected)
     power_quantities = {'gain_element','gain_tx','gain_rx'};
@@ -71,7 +71,7 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
     
     function set.elements(obj,val)
       
-      validateattributes(val, {'Antenna'}, {})
+      validateattributes(val, {'AbstractAntenna'}, {})
       obj.d_elements = val;
       
     end
