@@ -3,7 +3,7 @@
 classdef LinearArray < AbstractAntennaArray
   
   properties (Dependent)
-    num_element; % Number of array elements
+    num_elements; % Number of array elements
     element_pattern;    % Element beampattern
     gain_element;       % Element Gain
     spacing_element;    % Element spacing
@@ -15,7 +15,7 @@ classdef LinearArray < AbstractAntennaArray
   end
   
   properties (Access = protected)
-    d_num_element;
+    d_num_elements;
     d_element_pattern = 'Cosine';
     d_gain_element;
     d_spacing_element;
@@ -57,7 +57,7 @@ classdef LinearArray < AbstractAntennaArray
       AF = zeros(length(angle),1);
       for ii = 1:length(angle)
         AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
-          (0:obj.num_element-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
+          (0:obj.num_elements-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
       end
       
       % Convert back to degrees if necessary
@@ -128,10 +128,10 @@ classdef LinearArray < AbstractAntennaArray
       
     end
     
-    function set.num_element(obj,val)
+    function set.num_elements(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'})
-      obj.d_num_element = val;
+      obj.d_num_elements = val;
       
     end
     
@@ -141,7 +141,7 @@ classdef LinearArray < AbstractAntennaArray
       obj.d_element_pattern = val;
       switch obj.d_element_pattern
         case 'Cosine'
-          obj.elements = CosineAntenna([obj.num_element,1]);
+          obj.elements = CosineAntenna([obj.num_elements,1]);
         otherwise
           error('Element pattern not supported')
       end
@@ -183,8 +183,8 @@ classdef LinearArray < AbstractAntennaArray
       out = obj.d_spacing_element;
     end
     
-    function out = get.num_element(obj)
-      out = obj.d_num_element;
+    function out = get.num_elements(obj)
+      out = obj.d_num_elements;
     end
     
     function out = get.element_pattern(obj)

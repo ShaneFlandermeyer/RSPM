@@ -125,7 +125,7 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
   %% Public Methods
   methods
     
-    function cnr = CNR(obj,clutter,angle)
+    function cnr = CNR(obj,clutter)
       % Calculates the clutter-to-noise ratio for the given clutter at the
       % given range and angles
       
@@ -140,14 +140,18 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
       radar.scale = 'Linear';
       radar.antenna.angle_unit = 'Radians';
       
+      clutter = copy(clutter);
+      clutter.scale = 'Linear';
+      clutter.angle_unit = 'Radians';
+      
       % Array factor
-      AF = radar.antenna.arrayFactor(angle);
+      AF = radar.antenna.arrayFactor(clutter.az_center_patch);
       % Full array transmit gain
       Gt = radar.antenna.gain_tx*(abs(AF).^2).*...
-        radar.antenna.elements(1,1).normPowerGain(angle);
+        radar.antenna.elements(1,1).normPowerGain(clutter.az_center_patch);
       % Fuull array receive gain
       g = radar.antenna.gain_element*radar.antenna.gain_rx*...
-        radar.antenna.elements(1,1).normPowerGain(angle);
+        radar.antenna.elements(1,1).normPowerGain(clutter.az_center_patch);
       % AbstractClutter RCS
       sigma = clutter.patchRCS(radar);
       
