@@ -16,9 +16,11 @@ classdef LFM < PulsedWaveform
   end
   %% Public methods
   methods (Access = public)
+    
     % Create an LFM waveform with the given bandwidth, sample rate, and
     % pulse width, then normalize accordingly
     function data = waveform(obj)
+      
       samp_interval = 1/obj.samp_rate;
       t = (0:samp_interval:obj.pulse_width-samp_interval)';
       data = exp(1i*2*pi*...
@@ -29,7 +31,9 @@ classdef LFM < PulsedWaveform
       elseif (strcmpi(obj.normalization,'Time-Bandwidth'))
         data = data ./ obj.time_bandwidth;
       end
+      
     end
+    
   end % Abstract methods
   
   

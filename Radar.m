@@ -125,54 +125,45 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
   %% Public Methods
   methods
     
-    function cnr = CNR(obj,clutter,angle,range)
+    function cnr = CNR(obj,clutter,angle)
       % Calculates the clutter-to-noise ratio for the given clutter at the
       % given range and angles
       
+      % TODO: Only supports array objects for now
       if (~isa(obj.antenna,'AntennaArray'))
         error('This function currently only supports AntennaArray objects')
       end
       
-      was_db = false;
+      % Create a copy of the current object and change everything to
+      % linear/radians
+      radar = copy(obj);
+      radar.scale = 'Linear';
+      radar.antenna.angle_unit = 'Radians';
+      
+      % Array factor
+      AF = radar.antenna.arrayFactor(angle);
+      % Full array transmit gain
+      Gt = radar.antenna.gain_tx*(abs(AF).^2).*...
+        radar.antenna.elements(1,1).normPowerGain(angle);
+      % Fuull array receive gain
+      g = radar.antenna.gain_element*radar.antenna.gain_rx*...
+        radar.antenna.elements(1,1).normPowerGain(angle);
+      % Clutter RCS
+      sigma = clutter.patchRCS(radar);
+      
+      % CNR 
+      cnr = radar.power_tx*Gt.*g*radar.wavelength^2*sigma/((4*pi)^3*...
+        radar.power_noise*radar.loss_system*clutter.range^4);
+      
+      % Convert to dB if necessary
       if strcmpi(obj.scale,'dB')
-        was_db = true;
-        obj.scale = 'Linear';
-      end
-      
-      was_degrees = false;
-      if strcmpi(obj.antenna.angle_unit,'Degrees')
-        was_degrees = true;
-        obj.antenna.angle_unit = 'Radians';
-      end 
-      
-      AF = obj.antenna.arrayFactor(angle);
-      Gt = obj.antenna.gain_tx*(abs(AF).^2).*...
-        obj.antenna.elements(1,1).normPowerGain(angle);
-      g = obj.antenna.gain_element*obj.antenna.gain_rx*...
-        obj.antenna.elements(1,1).normPowerGain(angle);
-%       Gt = 10^(obj.antenna.gain_tx/10)*(abs(AF).^2).*...
-%         obj.antenna.elements(1,1).normPowerGain(angle);
-%       g = 10^(obj.antenna.gain_element/10).*...
-%         10^(obj.antenna.gain_rx/10)*obj.antenna.elements(1,1).normPowerGain(angle);
-      sigma = clutter.patchRCS(obj,range);
-      
-      cnr = obj.power_tx*Gt.*g*obj.wavelength^2*sigma/((4*pi)^3*...
-        obj.power_noise*obj.loss_system*range^4);
-      
-      if was_degrees
-        obj.antenna.angle_unit = 'Degrees';
-      end
-      
-      
-      if was_db
-        obj.scale = 'db';
         cnr = 10*log10(cnr);
       end
     end
     
     function range = measuredRange(obj,targets)
       % For each target in the list, calculate the range measured by the
-      % radar, accounting for range ambiguities;
+      % angle_quantities, accounting for range ambiguities;
       range = obj.trueRange(targets);
       for ii = 1:length(range)
         % Get the projection of the position vector onto the mainbeam pointing
@@ -239,40 +230,30 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       % Calculates the received power for the list of targets from the RRE.
       % For now, assuming monostatic configuration (G_t = G_r)
       
-      % Convert everything to linear for our calculations, but keep track of
-      % whether or not we need to go back to dB
-      was_db = false;
-      if (strcmpi(obj.scale,'db'))
-        obj.scale = 'linear';
-        was_db = true;
-      end
+      radar = copy(obj);
+      radar.scale = 'Linear';
+      radar.antenna.angle_unit = 'Radians';
       
       % Get the azimuth and elevation of the targets
       pos_matrix = [targets.position]';
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
-      % Convert to degree if necessary
-      if strncmpi(obj.antenna.angle_unit,'Degrees',1)
-        az = (180/pi)*az;
-        el = (180/pi)*el;
-      end
-      
       % Get the antenna gain in the azimuth/elevation of the targets. Also
       % convert to linear units if we're working in dB
-      G = obj.antenna.power_gain*obj.antenna.normVoltageGain(az,el).^2;
+      G = radar.antenna.power_gain*radar.antenna.normVoltageGain(az,el).^2;
       % Get the target ranges as seen by the radar
-      ranges = obj.trueRange(targets);
+      ranges = radar.trueRange(targets);
       % Calculate the power from the RRE for each target
-      power = obj.antenna.tx_power*G.^2*obj.antenna.wavelength^2.*...
-        [targets(:).rcs]'./((4*pi)^3*obj.loss_system*ranges.^4);
+      power = radar.antenna.tx_power*G.^2*radar.antenna.wavelength^2.*...
+        [targets(:).rcs]'./((4*pi)^3*radar.loss_system*ranges.^4);
       
       % Convert back to dB if necessary
-      if was_db
+      if strcmpi(obj.scale,'dB')
         power = 10*log10(power);
-        obj.scale = 'db';
       end
     end % receivedPower()
     
     function pulses = pulseBurstWaveform(obj)
+      
       % Returns an LM x 1 pulse train, where L is the number of fast time
       % samples of the waveform and M is the number of pulses to be
       % transmitted
@@ -282,15 +263,19 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       padded_pulse = [obj.waveform.data;zeros(num_zeros,1)];
       % Stack num_pulses padded pulses on top of each other
       pulses = repmat(padded_pulse,obj.num_pulses,1);
+      
     end % pulseBurstWaveform()
     
     function mf = pulseBurstMatchedFilter(obj)
+      
       % Returns an LM x 1 pulse train containing M copies of the length-L
       % matched filter vector
       mf = flipud(conj(obj.pulseBurstWaveform()));
+      
     end % pulseBurstMatchedFilter()
     
     function pulses = pulseMatrix(obj)
+      
       % Returns an L x M pulse train, where L is the number of fast time
       % samples of the waveform and M is the number of pulses to be
       % transmitted
@@ -313,13 +298,8 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       %  - targets: The list of target objects
       %  - data: The data in which target responses are injected
       
-      % All calculations should be in linear units, so convert to linear if
-      % in dB
-      was_db = false;
-      if (strcmpi(obj.scale,'db'))
-        obj.scale = 'linear';
-        was_db = true;
-      end
+      radar = copy(obj);
+      radar.scale = 'Linear';
       
       % Simulate the response of each target in the list on the input pulses.
       % This response includes the range-dependent target delay, the target
@@ -328,7 +308,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       % Input is a vector. Reshape to a matrix to do the calculations
       was_vector = false;
       if size(data,2) == 1
-        data = reshape(data,floor(length(data)/obj.num_pulses),obj.num_pulses);
+        data = reshape(data,floor(length(data)/radar.num_pulses),radar.num_pulses);
         was_vector = true;
       end
       
@@ -336,23 +316,23 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
       % Loop through all PRIs in the input data and create a scaled and
       % shifted copy for each target. The output for each PRI is the
       % superposition of these pulses
-      for ii = 1:obj.num_pulses
+      for ii = 1:radar.num_pulses
         % The true range of each target (used to ensure we don't include
         % ambiguous target returns before the pulse is actually received
-        true_ranges = obj.trueRange(targets);
+        true_ranges = radar.trueRange(targets);
         % The range of each target as seen from the radar
-        ranges = obj.measuredRange(targets);
+        ranges = radar.measuredRange(targets);
         % The possibly ambiguous sample delays of each target
-        delays = (2*ranges/obj.const.c)*obj.waveform.samp_rate;
+        delays = (2*ranges/radar.const.c)*radar.waveform.samp_rate;
         % The doppler shifts and amplitude for each target
-        dopp_shifts = exp(1i*2*pi*obj.measuredDoppler(targets)*obj.pri*ii);
-        amplitude_scaling = sqrt(obj.receivedPower(targets));
+        dopp_shifts = exp(1i*2*pi*radar.measuredDoppler(targets)*radar.pri*ii);
+        amplitude_scaling = sqrt(radar.receivedPower(targets));
         for jj = 1:length(targets)
           % If we have not been transmitting long enough to see a target, its
           % return should not be added into the received signal until we have
           % listened long enough to see it. For example, if a target is at
           % 1.5*r_unambig, it will not be visible until the second pulse.
-          if true_ranges(jj) < obj.range_unambig*ii
+          if true_ranges(jj) < radar.range_unambig*ii
             % Delay the sequence
             target_return = Radar.delaySequence(data(:,ii),delays(jj));
             % Scale the sequence by the RRE and doppler shift it according to
@@ -363,7 +343,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
             
             % Shift the target to its position for the next PRI
             targets(jj).position = targets(jj).position + ...
-              targets(jj).velocity*obj.pri;
+              targets(jj).velocity*radar.pri;
           end
         end
       end
@@ -373,59 +353,7 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
         out = reshape(out,numel(out),1);
       end
       
-      % Convert back to dB if necessary
-      if was_db
-        obj.scale = 'db';
-      end
-      
     end % simulateTargets()
-    
-    function out = simulateTargetsPulseBurst(obj,targets,data)
-      % Simulate the effects of each target in the list on the input pulse burst
-      % waveform. Target effects are applied on a per-sample basis, but the stop
-      % and hop model is assumed so the amplitudes, delays, and doppler shifts
-      % are only calculated once per pulse. This method produces an identical
-      % output as simulateTargets(), but it's about 10x slower so it isn't
-      % actually used in project 2.
-      
-      was_db = false;
-      if (strcmpi(obj.scale,'db'))
-        obj.scale = 'linear';
-        was_db = true;
-      end
-      
-      % Time indices of the start of each pulse
-      Tadc = 1/obj.waveform.samp_rate;
-      t = (0:Tadc:obj.pri*obj.num_pulses-Tadc)';
-      pri_length = obj.pri*obj.waveform.samp_rate;
-      out = zeros(size(data));
-      % Get the shifted returns for each target then sum them together
-      measured_range = 0;
-      delay = 0;
-      dopp_shift = 0;
-      amplitude = 0;
-      for ii = 1:length(targets)
-        for jj = 1:numel(data)
-          % Calculate new target parameters ONLY on the first sample of each new
-          % pulse (stop and hop assumption)
-          if (jj == 1 || ~mod(jj,pri_length))
-            measured_range = obj.measuredRange(targets(ii));
-            delay = round((2*measured_range/obj.const.c)*obj.waveform.samp_rate);
-            dopp_shift = exp(1i*2*pi*obj.trueDoppler(targets(ii))*t(jj));
-            amplitude = sqrt(obj.receivedPower(targets(ii)));
-          end
-          % Scale and shift each sample according to the above calculations
-          if jj > delay
-            out(jj) = out(jj) + data(jj-delay)*amplitude*dopp_shift;
-          end
-        end
-      end
-      
-      % Convert back to dB if necessary
-      if was_db
-        obj.scale = 'db';
-      end
-    end % simulateTargetsPulseBurst()
     
     function [mf_resp,range_axis] = matchedFilterResponse(obj,data)
       
@@ -502,13 +430,16 @@ classdef Radar < matlab.mixin.Copyable & RFSystem
     end % dopplerProcessing()
     
     function snr = SNR(obj,targets)
+
       % Compute the SNR for each target in the input list
       if (strcmpi(obj.scale,'db'))
         snr = obj.receivedPower(targets) - obj.power_noise;
       else
         snr = obj.receivedPower(targets) / obj.power_noise;
       end
+      
     end
+    
   end
   
   %% Static Methods

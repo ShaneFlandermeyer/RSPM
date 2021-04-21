@@ -75,11 +75,14 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   methods
     
     function set.backlobe_attenuation(obj,val)
+      
       validateattributes(val,{'numeric'},{'scalar','nonnan'});
       obj.d_backlobe_attenuation = val;
+      
     end
     
     function set.scale(obj,val)
+      
       validateattributes(val,{'string','char'},{});
       if strncmpi(val,'linear',1) && ~strncmpi(obj.scale,'Linear',1)
         % Change all voltage/power quantities to linear scale
@@ -90,32 +93,40 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
         obj.convertTodB();
         obj.d_scale = 'dB';
       end
+      
     end
     
     function set.angle_unit(obj,val)
+      
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Degrees',1)
+      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angle_unit,'Degrees',1)
         % Convert angle measures to degree
         obj.d_angle_unit = 'Degrees';
         obj.convertToDegree();
-      elseif strncmpi(val,'Radians',1)
+      elseif strncmpi(val,'Radians',1) && ~strncmpi(obj.angle_unit,'Radians',1)
         % Convert angle measures to radians
         obj.d_angle_unit = 'Radians';
         obj.convertToRadian();
       end
+      
     end
     
     function set.azimuth(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan'});
       obj.d_azimuth = val;
+      
     end
     
     function set.elevation(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan'});
       obj.d_elevation = val;
+      
     end
     
     function set.mainbeam_direction(obj,val)
+      
       validateattributes(val,{'numeric'},...
         {'vector','3d','finite','nonnan'});
       if isrow(val) % Make this a column vector
@@ -126,27 +137,34 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       [obj.azimuth,obj.elevation] = ...
         cart2sph(obj.mainbeam_direction(1),...
         obj.mainbeam_direction(2),obj.mainbeam_direction(3));
+      
     end
     
     function set.tx_power(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_tx_power = val;
+      
     end
     
     function set.wavelength(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_wavelength = val;
-      obj.checkIfUpdated('wavelength',val);
       obj.d_center_freq = obj.const.c/obj.wavelength;
+      
     end
     
     function set.center_freq(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_center_freq = val;
       obj.d_wavelength = obj.const.c/obj.center_freq;
+      
     end
     
     function set.position(obj,val)
+      
       validateattributes(val,{'numeric'},...
         {'vector','3d','finite','nonnan'});
       if isrow(val) % Make this a column vector
@@ -222,51 +240,63 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       else
         gain = obj.normVoltageGain(az,el);
       end
+      
     end
+    
   end
   %% Private Methods
   methods (Access = private)
     
     % Convert all parameters that are currently in linear units to dB
     function convertTodB(obj)
+      
       for ii = 1:numel(obj.power_quantities)
         obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
       end
       for ii = 1:numel(obj.voltage_quantities)
         obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
       end
+      
     end
     
     % Convert all parameters that are currently in dB to linear units
     function convertToLinear(obj)
+      
       for ii = 1:numel(obj.power_quantities)
         obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
       end
       for ii = 1:numel(obj.voltage_quantities)
         obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
       end
+      
     end
     
     % Convert all angle measures to degree
     function convertToDegree(obj)
+      
       for ii = 1:numel(obj.angle_quantities)
         obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
       end
+      
     end
     
     % Convert all angle measures to radians
     function convertToRadian(obj)
+      
       for ii = 1:numel(obj.angle_quantities)
         obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
       end
+      
     end
     
   end
   
   %% Hidden Methods (DO NOT EDIT THESE)
   methods (Hidden)
+    
     % Sort the object properties alphabetically
     function value = properties( obj )
+      
       % Put the properties list in sorted order
       propList = sort( builtin("properties", obj) );
       % Move any control switch parameters to the top of the output
@@ -278,17 +308,26 @@ classdef (Abstract) Antenna < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
       else
         value = propList;
       end
+      
     end
     % Sort the object field names alphabetically
     function value = fieldnames( obj )
+      
       value = sort( builtin( "fieldnames", obj ) );
+      
     end
+    
   end
+  
   methods (Access = protected)
+    
     function group = getPropertyGroups( obj )
+      
       props = properties( obj );
       group = matlab.mixin.util.PropertyGroup( props );
+      
     end
+    
   end
   
 end % class

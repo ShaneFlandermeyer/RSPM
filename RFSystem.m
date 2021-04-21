@@ -117,10 +117,10 @@ classdef (Abstract) RFSystem < matlab.mixin.Copyable & matlab.mixin.CustomDispla
     function set.scale(obj,val)
       
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Linear',1)
+      if strncmpi(val,'Linear',1) && ~strncmpi(obj.scale,'Linear',1)
         obj.d_scale = 'Linear';
         obj.convertToLinear();
-      elseif strncmpi(val,'dB',1)
+      elseif strncmpi(val,'dB',1) && ~strncmpi(obj.scale,'dB',1)
         obj.d_scale = 'dB';
         obj.convertTodB();
       end

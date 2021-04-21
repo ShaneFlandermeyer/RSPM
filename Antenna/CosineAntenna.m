@@ -3,10 +3,12 @@
 classdef CosineAntenna < Antenna
   
   properties
+    
     % Aperture area. For now, I'm not doing anything with this parameter
     % and it is only included to make this class concrete (since area is an
     % abstract parameter)
     area;
+    
   end
   
   methods (Access = public)
@@ -54,5 +56,7 @@ classdef CosineAntenna < Antenna
       end
       
     end
+    
   end
+  
 end

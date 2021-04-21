@@ -32,6 +32,7 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
   methods 
     
     function set.angle_unit(obj,val)
+      
       validateattributes(val,{'string','char'},{});
       if strncmpi(val,'Degrees',1)
         % Convert angle measures to degree
@@ -45,9 +46,11 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
         obj.convertToRadian();
         [obj.elements.angle_unit] = deal('Radians');
       end
+      
     end
     
     function set.scale(obj,val)
+      
       validateattributes(val,{'string','char'},{});
       if strncmpi(val,'Linear',1) && ~strncmpi(obj.scale,'Linear',1)
         % Change all voltage/power quantities to linear scale
@@ -63,23 +66,30 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
         % Also update the individual element objects
         [obj.elements.scale] = deal('dB');
       end
+      
     end
     
     function set.elements(obj,val)
+      
       validateattributes(val, {'Antenna'}, {})
       obj.d_elements = val;
+      
     end
     
     function set.center_freq(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_center_freq = val;
       obj.d_wavelength = obj.const.c/val;
+      
     end
     
     function set.wavelength(obj,val)
+      
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_wavelength = val;
       obj.d_center_freq = obj.const.c/val;
+      
     end
     
   end
@@ -158,8 +168,10 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
   end % Private methods
   %% Hidden Methods
   methods (Hidden)
+    
     % Sort the object properties alphabetically
     function value = properties( obj )
+      
       % Put the properties list in sorted order
       propList = sort( builtin("properties", obj) );
       % Move any control switch parameters to the top of the output
@@ -171,17 +183,27 @@ classdef (Abstract) AntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDi
       else
         value = propList;
       end
+      
     end
+    
     % Sort the object field names alphabetically
     function value = fieldnames( obj )
+      
       value = sort( builtin( "fieldnames", obj ) );
+      
     end
+    
   end
+  
   methods (Access = protected)
+    
     function group = getPropertyGroups( obj )
+      
       props = properties( obj );
       group = matlab.mixin.util.PropertyGroup( props );
+      
     end
+    
   end
   
 end
