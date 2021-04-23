@@ -6,7 +6,7 @@
 %
 % Blame: Shane Flandermeyer
 classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
-  
+
   %% Private properties
   properties (Access = private)
     % List of parameters that should be updated when we change the scale
@@ -25,6 +25,7 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
     velocity_unambig; % Unambiguous velocity (m/s)
     doppler_unambig;  % Unambiguous doppler frequency (Hz)
     range_resolution; % Range resolution (m)
+    range_horizon;    % Range to the horizon
   end
   
   % Internal class data
@@ -35,7 +36,6 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
     d_pri;
     d_num_pulses;
   end
-  
   
   %% Setter Methods
   methods
@@ -82,6 +82,11 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
   %% Getter Methods
   methods
     
+    function out = get.range_horizon(obj)
+      % DEPENDS ON COORDINATE SYSTEM
+      out = sqrt(2*obj.const.ae*obj.position(3) + obj.position(3)^2);
+    end
+    
     function out = get.range_resolution(obj)
       out = obj.const.c/2/obj.bandwidth;
     end
@@ -107,17 +112,14 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
     end
     
     function out = get.doppler_unambig(obj)
-      % Calculate the unambiguous doppler
       out = obj.prf/2;
     end
     
     function out = get.range_unambig(obj)
-      % Calculate the unambiguous range
       out = obj.const.c*obj.pri/2;
     end
     
     function out = get.velocity_unambig(obj)
-      % Calculate the unambiguous velocity
       out = obj.wavelength*obj.prf/4;
     end
   end
@@ -125,13 +127,58 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
   %% Public Methods
   methods
     
+    function rank = clutterRank(obj)
+      % Calculates the clutter rank according to Brennan's rule.
+      % That is, rc = round(N + (M-1)beta), where N is the number of antenna
+      % array elements, M is the number of pulses per CPI, and beta is the 
+      % number of half interelement spacings traversed by the platform
+      % during a single PRI
+      
+      if ~isa(obj.antenna,'AbstractAntennaArray')
+        error('Antenna must be an array (for now)')
+      end
+      beta = 2*norm(obj.velocity)*obj.pri/obj.antenna.spacing_element;
+      rank = round(obj.antenna.num_elements + (obj.num_pulses-1)*beta);
+      
+    end
+    
+    function jnr = JNR(obj,jammer)
+      % Calculate the JNR (per element, per pulse) for the given array of 
+      % jammer objects
+     
+      if ~isa(jammer,'BarrageJammer')
+        error('Calculation currently only supported for barrage jammers')
+      end
+      
+      % Convert the copied objects to linear units and radian angles
+      radar = copy(obj);
+      jammer = copy(jammer);
+      radar.scale = 'Linear';
+      radar.antenna.angle_unit = 'Radians';
+      [jammer.angle_unit] = deal('Radians');
+      % Receive element gain. Since the JNR is per element, we do not include
+      % the Re
+      g = radar.antenna.elements(1,1).normPowerGain([jammer.azimuth],[jammer.elevation])*...
+        radar.antenna.gain_element;
+      % Jammer power
+      J0 = [jammer.power_radiated_eff]*radar.bandwidth.*g*obj.wavelength^2 ./ ...
+        ((4*pi)^2*[jammer.range].^2*radar.loss_system);
+      % JNR
+      jnr = J0.'/radar.power_noise;
+      if strcmpi(obj.scale,'dB')
+        % Convert to dB
+        jnr = 10*log10(jnr);
+      end
+      
+    end
+    
     function cnr = CNR(obj,clutter)
       % Calculates the clutter-to-noise ratio for the given clutter at the
       % given range and angles
       
       % TODO: Only supports array objects for now
       if (~isa(obj.antenna,'AbstractAntennaArray'))
-        error('This function currently only supports AbstractAntennaArray objects')
+        error('Antenna must be an array (for now)')
       end
       
       % Create a copy of the current object and change everything to
@@ -257,7 +304,6 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
     end % receivedPower()
     
     function pulses = pulseBurstWaveform(obj)
-      
       % Returns an LM x 1 pulse train, where L is the number of fast time
       % samples of the waveform and M is the number of pulses to be
       % transmitted

@@ -9,7 +9,7 @@ classdef ConstantGammaClutter < AbstractClutter
   
   properties (Dependent)
 
-    gamma;              % AbstractClutter gamma
+    gamma;              % Clutter gamma
 
   end
   
@@ -23,15 +23,20 @@ classdef ConstantGammaClutter < AbstractClutter
   methods (Access = public)
     
     function sigma = patchRCS(obj,radar)
+      % Compute the radar cross section of each clutter patch in the 
+      % range ring
       
+      if ~strcmpi(obj.earth_model,'Flat')
+        error('The assumptions for this computation currently only hold for the flat earth model.')
+      end
+      
+      % Make a copy of the object so we don't change the real object's state
       clutter = copy(obj);
       clutter.scale = 'Linear';
-      % Calculate the clutter patch radar cross section for every patch in
-      % the given range, assuming all patches have the same area
       patch_area = clutter.patchArea(radar);
-      % TODO: This grazing angle only applies for the flat earth model and
-      %       the coordinate system with the origin directly below the radar
       angle_graze = asin(radar.position(3)/clutter.range);
+       
+      % Compute the patch RCS using Ward eq. (56)
       sigma0 = clutter.gamma*sin(angle_graze);
       sigma = sigma0*patch_area;
       

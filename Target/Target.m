@@ -1,10 +1,5 @@
 % A class representing a basic point target. 
 %
-% NOTE FOR PROJECT 2: This has not changed since project 1
-%
-% TODO: 
-%  - Make this class abstract?
-%
 % Blame: Shane Flandermeyer
 classdef Target < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   

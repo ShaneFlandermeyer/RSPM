@@ -74,7 +74,7 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       % patches. This should really be squared by the square of the noise
       % power, but I'm normalizing it to get consistent results with the
       % ward report
-      ksic = diag(radar.CNR(clutter));
+      power_clutter = diag(radar.CNR(clutter));
       
       % Steering vector
       angle_graze = asin(radar.position(3)/clutter.range);
@@ -101,7 +101,7 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       end
       
       % Clutter covariance matrix
-      Rc = Vc*ksic*Vc';
+      Rc = Vc*power_clutter*Vc';
       
       
     end

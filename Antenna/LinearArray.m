@@ -105,7 +105,7 @@ classdef LinearArray < AbstractAntennaArray
       
       validateattributes(val,{'numeric'},{'finite','nonnan'})
       obj.d_gain_rx = val;
-     
+      
     end
     
     function set.angle_steering(obj,val)

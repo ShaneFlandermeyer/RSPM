@@ -7,7 +7,8 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
   
   % Constants
   properties (Constant = true, Access = protected)
-    const = struct('c',299792458,'k',1.38064852e-23,'T0_k',290)
+    const = struct('c',299792458,'k',1.38064852e-23,'T0_k',290,...
+      'Re',6370000,'ae',(4/3)*6370000);
   end
   
   % Private properties

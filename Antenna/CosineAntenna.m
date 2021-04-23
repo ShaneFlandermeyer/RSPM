@@ -31,27 +31,23 @@ classdef CosineAntenna < AbstractAntenna
       
       % Compute everything in linear units, but convert back to db if
       % necessary
-      was_db = false;
-      if strncmpi(obj.scale,'dB',1)
-        obj.scale = 'Linear';
-        was_db = true;
-      end
+      ant = copy(obj);
+      ant.scale = 'Linear';
       
-      if strncmpi(obj.angle_unit,'Radians',1)
+      if strncmpi(ant.angle_unit,'Radians',1)
         % Radians angles
         gain = abs(cos(az).*cos(el));
         % If the angle is in the backlobe, attenuate it
-        gain(abs(az) >= pi/2) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= pi/2);
+        gain(abs(az) >= pi/2) = sqrt(ant.backlobe_attenuation)*gain(abs(az) >= pi/2);
       else
         % Degrees angles
         gain = abs(cosd(az).*cosd(el));
         % If the angle is in the backlobe, attenuate it
-        gain(abs(az) >= 90) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= 90);
+        gain(abs(az) >= 90) = sqrt(ant.backlobe_attenuation)*gain(abs(az) >= 90);
       end
       
       % Convert back to dB
-      if was_db
-        obj.scale = 'dB';
+      if strcmpi(obj.scale,'dB')
         gain = 20*log10(abs(gain));
       end
       
