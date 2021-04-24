@@ -3,7 +3,7 @@
 classdef LinearArray < AbstractAntennaArray
   
   properties (Dependent)
-    num_elements; % Number of array elements
+    
     element_pattern;    % Element beampattern
     gain_element;       % Element Gain
     spacing_element;    % Element spacing
@@ -15,7 +15,7 @@ classdef LinearArray < AbstractAntennaArray
   end
   
   properties (Access = protected)
-    d_num_elements;
+    
     d_element_pattern = 'Cosine';
     d_gain_element;
     d_spacing_element;
@@ -128,12 +128,6 @@ classdef LinearArray < AbstractAntennaArray
       
     end
     
-    function set.num_elements(obj,val)
-      
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'})
-      obj.d_num_elements = val;
-      
-    end
     
     function set.element_pattern(obj,val)
       
@@ -183,9 +177,6 @@ classdef LinearArray < AbstractAntennaArray
       out = obj.d_spacing_element;
     end
     
-    function out = get.num_elements(obj)
-      out = obj.d_num_elements;
-    end
     
     function out = get.element_pattern(obj)
       out = obj.d_element_pattern;

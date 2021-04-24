@@ -2,17 +2,22 @@
 
 classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
+  % Conversion quantities
   properties (Access = protected)
+    
     power_quantities = {'gain_element','gain_tx','gain_rx'};
     voltage_quantities = {};
     angle_quantities = {};
   end
   
+  % Constants
   properties (Constant, Access = protected)
     const = struct('c',299792458)
   end
   
+  % Public properties
   properties (Dependent)
+    num_elements; % Number of array elements
     angle_unit;
     scale;
     elements;
@@ -20,16 +25,62 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
     wavelength;
   end
   
+  % Internal data storage
   properties (Access = protected)
+    d_num_elements;
     d_angle_unit = 'Radians';
     d_scale = 'dB';
     d_elements;
     d_center_freq;
     d_wavelength;
   end
+  
+  %% Public Methods
+  
+  methods
+    
+    function set.num_elements(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'})
+      obj.d_num_elements = val;
+      
+    end
+    
+    function a = spatialSteeringVector(obj,freq_spatial)
+      % Computes the spatial steering vector to a given spatial frequency
+      % If the input is a vector of size L, this function returns an N x L
+      % matrix, where N is the number of array elements and each column in 
+      % the matrix corresponds to a spatial frequency from the input
+      
+      % If the input is a column vector, make it a row vector to maintain
+      % the output dimensions specified above
+      if iscolumn(freq_spatial)
+        freq_spatial = freq_spatial.';
+      end
+
+      if numel(freq_spatial) == 1 % Scalar case
+        a = exp(1i*2*pi*freq_spatial*(0:obj.num_elements-1)');
+      else % Vector case
+        % Set up problem dimensions so that we can use a Hadamard product
+        % instead of a loop
+        N = repmat((0:obj.num_elements-1)',1,numel(freq_spatial));
+        freq_spatial = repmat(freq_spatial,obj.num_elements,1);
+        a = exp(1i*2*pi*freq_spatial.*N);
+      end
+
+    end
+    
+  end
+  
   %% Setter Methods
   
-  methods 
+  methods
+    
+    function out = get.num_elements(obj)
+      
+      out = obj.d_num_elements;
+      
+    end
     
     function set.angle_unit(obj,val)
       

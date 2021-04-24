@@ -25,6 +25,7 @@ classdef  (Abstract) Waveform < matlab.mixin.Copyable & matlab.mixin.CustomDispl
     function set.normalization(obj,val)
       
       validateattributes(val,{'string','char'},{});
+      
       if strncmpi(val,'Time-Bandwidth',1)
         obj.normalization = 'Time-Bandwidth';
       elseif strncmpi(val,'Energy',1)
@@ -49,10 +50,12 @@ classdef  (Abstract) Waveform < matlab.mixin.Copyable & matlab.mixin.CustomDispl
   end
   %% Abstract Methods
   methods (Abstract)
+    
     % Calculate the ambiguity function and return it along with proper delay and
     % doppler axes
     [ambfun,t,fd] = ambiguityFunction(obj);
     data = waveform(obj); % Generate a waveform vector from an object
+    
   end
   
   

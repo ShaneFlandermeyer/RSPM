@@ -64,6 +64,12 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       if isrow(val)
         val = val.';
       end
+      if (val(1) ~= 0) || (val(2) ~= 0)
+        err_msg = ['Object currently only supports coordinate system\n',...
+          'with origin defined as directly below the platform ',...
+          '(i.e., x = 0, y = 0)'];
+        warning(sprintf(err_msg));
+      end
       obj.d_position = val;
       
     end

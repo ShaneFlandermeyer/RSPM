@@ -27,7 +27,7 @@ classdef LFM < PulsedWaveform
         (-obj.bandwidth/2*t + obj.bandwidth/2/obj.pulse_width*t.^2));
       % Normalize the data 
       if (strcmpi(obj.normalization,'Energy'))
-        data = data ./ norm(data);
+        data = data ./ norm(data) * obj.time_bandwidth;
       elseif (strcmpi(obj.normalization,'Time-Bandwidth'))
         data = data ./ obj.time_bandwidth;
       end

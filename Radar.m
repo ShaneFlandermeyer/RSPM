@@ -5,127 +5,58 @@
 % - Add multistatic capabilities
 %
 % Blame: Shane Flandermeyer
-classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
+classdef Radar < AbstractRFSystem
+%% Public Methods
+  methods
+    
+    function v = spaceTimeSteeringVector(obj,freq_spatial,freq_doppler)
+      % Compute the space-time steering vector to the given spatial and
+      % UNNORMALIZED doppler frequency (Hz)
+      
+      if numel(freq_spatial) > 1 ||numel(freq_doppler) > 1  
+        error('This function currently only supports scalar inputs')
+      end
+      
+      % Calculate the spatial steering vector
+      if ~isa(obj.antenna,'AbstractAntennaArray')
+        % If the antenna is not an array, there is no steering
+        a = 1;
+      else
+        a = obj.antenna.spatialSteeringVector(freq_spatial);
+      end
+      
+      % Calculate the temporal steering vector
+      b = obj.temporalSteeringVector(freq_doppler);
+      
+      % Calculate the space-time steering vector
+      v = kron(b,a);
 
-  %% Private properties
-  properties (Access = private)
-    % List of parameters that should be updated when we change the scale
-    % from linear to dB or vice versa
-    power_list = {'loss_system','noise_fig'};
-  end
-  
-  % Members exposed to the outside world
-  properties (Dependent)
-    antenna;          % AbstractAntenna object
-    waveform;         % Waveform object
-    prf;              % Pulse repetition frequency (Hz)
-    pri;              % Pulse repetition interval (s)
-    num_pulses;       % Number of pulses in a CPI
-    range_unambig;    % Unambiguous range (m)
-    velocity_unambig; % Unambiguous velocity (m/s)
-    doppler_unambig;  % Unambiguous doppler frequency (Hz)
-    range_resolution; % Range resolution (m)
-    range_horizon;    % Range to the horizon
-  end
-  
-  % Internal class data
-  properties (Access = protected)
-    d_antenna;
-    d_waveform;
-    d_prf;
-    d_pri;
-    d_num_pulses;
-  end
-  
-  %% Setter Methods
-  methods
+    end
     
-    function set.num_pulses(obj,val)
+    function b = temporalSteeringVector(obj,freq_doppler)
+      % Computes the temporal steering vector to an UNNORMALIZED doppler
+      % frequency in Hz. If the input is a vector of size L, this function
+      % returns an M x L matrix, where M is the number of pulses per CPI 
+      % and each column in the matrix corresponds to a doppler shift from
+      % the input
       
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_num_pulses = val;
-      
-    end
-    
-    function set.prf(obj,val)
-      
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_prf = val;
-      obj.d_pri = 1 / obj.d_prf;
-      
-    end
-    
-    function set.pri(obj,val)
-      
-      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_pri = val;
-      obj.d_prf = 1 / obj.d_pri;
-      
-    end
-    
-    function set.waveform(obj,val)
-      
-      validateattributes(val,{'Waveform'},{});
-       obj.d_waveform = val;
-       
-    end
-    
-    function set.antenna(obj,val)
-      
-      validateattributes(val,{'AbstractAntenna','AbstractAntennaArray'},{});
-      obj.d_antenna = val;
-      
-    end
-    
-  end
-  
-  %% Getter Methods
-  methods
-    
-    function out = get.range_horizon(obj)
-      % DEPENDS ON COORDINATE SYSTEM
-      out = sqrt(2*obj.const.ae*obj.position(3) + obj.position(3)^2);
-    end
-    
-    function out = get.range_resolution(obj)
-      out = obj.const.c/2/obj.bandwidth;
-    end
-    
-    function out = get.num_pulses(obj)
-      out = obj.d_num_pulses;
-    end
-    
-    function out = get.prf(obj)
-      out = obj.d_prf;
-    end
-    
-    function out = get.pri(obj)
-      out = obj.d_pri;
-    end
-    
-    function out = get.waveform(obj)
-      out = obj.d_waveform;
-    end
-    
-    function out = get.antenna(obj)
-      out = obj.d_antenna;
-    end
-    
-    function out = get.doppler_unambig(obj)
-      out = obj.prf/2;
-    end
-    
-    function out = get.range_unambig(obj)
-      out = obj.const.c*obj.pri/2;
-    end
-    
-    function out = get.velocity_unambig(obj)
-      out = obj.wavelength*obj.prf/4;
-    end
-  end
-  
-  %% Public Methods
-  methods
+      % If the input is a column vector, make it a row vector to maintain
+      % the output dimensions specified above
+      if ~isscalar(freq_doppler) && iscolumn(freq_doppler)
+        freq_doppler = freq_doppler.';
+      end
+
+      if numel(freq_doppler) == 1 % Scalar case
+        b = exp(1i*2*pi*freq_doppler/obj.prf*(0:obj.num_pulses-1)');
+      else % Vector case
+        % Set up problem dimensions so that we can use a Hadamard product
+        % instead of a loop
+        M = repmat((0:obj.num_pulses-1)',1,numel(freq_doppler));
+        freq_doppler = repmat(freq_doppler,obj.num_pulses,1);
+        b = exp(1i*2*pi*freq_doppler/obj.prf.*M);
+      end
+     
+    end 
     
     function rank = clutterRank(obj)
       % Calculates the clutter rank according to Brennan's rule.
@@ -230,6 +161,9 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
     end % trueRange()
     
     function doppler = measuredDoppler(obj,targets)
+      if ~isa(targets,'AbstractTarget')
+        error('Function only supports target objects')
+      end
       % Calculate the measured doppler shift of each target in the list,
       % accounting for ambiguities
       doppler = zeros(numel(targets),1); % Pre-allocate
@@ -237,7 +171,7 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
         % Calculate the shift that would be measured with no ambiguities.
         % NOTE: We define negative doppler as moving towards the radar, so there
         % is a sign change.
-        position_vec = targets(ii).position - obj.antenna.position;
+        position_vec = targets(ii).position - obj.position;
         position_vec = position_vec / norm(position_vec);
         true_doppler = -dot(targets(ii).velocity,position_vec)*...
           2/obj.antenna.wavelength;
@@ -347,6 +281,8 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
       % INPUTS:
       %  - targets: The list of target objects
       %  - data: The data in which target responses are injected
+      % 
+      % OUTPUT: The scaled and shifted target response
       
       radar = copy(obj);
       radar.scale = 'Linear';
@@ -491,6 +427,124 @@ classdef Radar < matlab.mixin.Copyable & AbstractRFSystem
     end
     
   end
+  %% Private properties
+  properties (Access = private)
+    % List of parameters that should be updated when we change the scale
+    % from linear to dB or vice versa
+    power_list = {'loss_system','noise_fig'};
+  end
+  
+  % Members exposed to the outside world
+  properties (Dependent)
+    antenna;          % AbstractAntenna object
+    waveform;         % Waveform object
+    prf;              % Pulse repetition frequency (Hz)
+    pri;              % Pulse repetition interval (s)
+    num_pulses;       % Number of pulses in a CPI
+    range_unambig;    % Unambiguous range (m)
+    velocity_unambig; % Unambiguous velocity (m/s)
+    doppler_unambig;  % Unambiguous doppler frequency (Hz)
+    range_resolution; % Range resolution (m)
+    range_horizon;    % Range to the horizon
+  end
+  
+  % Internal class data
+  properties (Access = protected)
+    d_antenna;
+    d_waveform;
+    d_prf;
+    d_pri;
+    d_num_pulses;
+  end
+  
+  %% Setter Methods
+  methods
+    
+    function set.num_pulses(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.d_num_pulses = val;
+      
+    end
+    
+    function set.prf(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.d_prf = val;
+      obj.d_pri = 1 / obj.d_prf;
+      
+    end
+    
+    function set.pri(obj,val)
+      
+      validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
+      obj.d_pri = val;
+      obj.d_prf = 1 / obj.d_pri;
+      
+    end
+    
+    function set.waveform(obj,val)
+      
+      validateattributes(val,{'Waveform'},{});
+       obj.d_waveform = val;
+       
+    end
+    
+    function set.antenna(obj,val)
+      
+      validateattributes(val,{'AbstractAntenna','AbstractAntennaArray'},{});
+      obj.d_antenna = val;
+      
+    end
+    
+  end
+  
+  %% Getter Methods
+  methods
+    
+    function out = get.range_horizon(obj)
+      % DEPENDS ON COORDINATE SYSTEM
+      out = sqrt(2*obj.const.ae*obj.position(3) + obj.position(3)^2);
+    end
+    
+    function out = get.range_resolution(obj)
+      out = obj.const.c/2/obj.bandwidth;
+    end
+    
+    function out = get.num_pulses(obj)
+      out = obj.d_num_pulses;
+    end
+    
+    function out = get.prf(obj)
+      out = obj.d_prf;
+    end
+    
+    function out = get.pri(obj)
+      out = obj.d_pri;
+    end
+    
+    function out = get.waveform(obj)
+      out = obj.d_waveform;
+    end
+    
+    function out = get.antenna(obj)
+      out = obj.d_antenna;
+    end
+    
+    function out = get.doppler_unambig(obj)
+      out = obj.prf/2;
+    end
+    
+    function out = get.range_unambig(obj)
+      out = obj.const.c*obj.pri/2;
+    end
+    
+    function out = get.velocity_unambig(obj)
+      out = obj.wavelength*obj.prf/4;
+    end
+  end
+  
+  
   
   %% Static Methods
   methods (Static)
