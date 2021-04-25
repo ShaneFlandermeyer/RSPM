@@ -34,6 +34,40 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
   
   %% Public Methods
   methods
+    
+    function jnr = JNR(obj,radar)
+      % Calculate the JNR (per element, per pulse) for the given array of 
+      % jammer objects
+     
+      if ~isa(obj,'BarrageJammer')
+        error('Calculation currently only supported for barrage jammers')
+      end
+      
+      % Convert the copied objects to linear units and radian angles
+      radar = copy(radar);
+      jammer = copy(obj);
+      radar.scale = 'Linear';
+      radar.antenna.angle_unit = 'Radians';
+      [jammer.angle_unit] = deal('Radians');
+      % Receive element gain. Since the JNR is per element, we do not include
+      % the Re
+      g = radar.antenna.elements(1,1).normPowerGain([jammer.azimuth],[jammer.elevation])*...
+        radar.antenna.gain_element;
+      % Jammer power
+      J0 = [jammer.power_radiated_eff]*radar.bandwidth.*g*radar.wavelength^2 ./ ...
+        ((4*pi)^2*[jammer.range].^2*radar.loss_system);
+      % JNR
+      jnr = J0.'/radar.power_noise;
+      
+      for ii = 1:length(jammer)
+        if strcmpi(jammer(ii).scale,'dB')
+          jnr(ii) = 10*log10(jnr(ii));
+        end
+      end
+      
+      
+    end
+    
     function [Rj,Aj] = covariance(obj,radar)
       
       % Compute the clairvoyant clutter covariance matrix using eq. (64) of
@@ -59,7 +93,7 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
         Aj(:,ii) = exp(1i*2*pi*freq_spatial(ii)*(0:N-1));
       end
       % J x J jammer source covariance matrix
-      jam_source_cov = diag(radar.JNR(jammer));
+      jam_source_cov = diag(jammer.JNR(radar));
       % N x J jammer spatial covariance matrix
       spatial_cov = Aj*jam_source_cov*Aj';
       % Complete space-time covariance matrix (assumes jammers are

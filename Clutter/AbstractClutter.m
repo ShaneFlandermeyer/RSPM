@@ -41,8 +41,55 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
     
   end
   
+  %% Abstract Methods
+  methods (Abstract)
+    % Calculate the clutter patch RCS observed by the given radar system
+    sigma = patchRCS(obj,radar);
+  end
+  
   %% Public Methods
   methods (Access = public)
+    
+    function cnr = CNR(obj,radar)
+      % Calculates the clutter-to-noise ratio for the given clutter at the
+      % given range and angles
+      
+      % TODO: Only supports array objects for now
+      if (~isa(radar.antenna,'AbstractAntennaArray'))
+        error('Antenna must be an array (for now)')
+      end
+      
+      % Create a copy of the current object and change everything to
+      % linear/radians
+      radar = copy(radar);
+      radar.scale = 'Linear';
+      radar.antenna.angle_unit = 'Radians';
+      
+      clutter = copy(obj);
+      clutter.scale = 'Linear';
+      clutter.angle_unit = 'Radians';
+      
+      % Array factor
+      AF = radar.antenna.arrayFactor(clutter.az_center_patch);
+      % Full array transmit gain
+      Gt = radar.antenna.gain_tx*(abs(AF).^2).*...
+        radar.antenna.elements(1,1).normPowerGain(clutter.az_center_patch);
+      % Fuull array receive gain
+      g = radar.antenna.gain_element*radar.antenna.gain_rx*...
+        radar.antenna.elements(1,1).normPowerGain(clutter.az_center_patch);
+      % AbstractClutter RCS
+      sigma = clutter.patchRCS(radar);
+      
+      % CNR 
+      cnr = radar.power_tx*Gt.*g*radar.wavelength^2*sigma/((4*pi)^3*...
+        radar.power_noise*radar.loss_system*clutter.range^4);
+      
+      % Convert to dB if necessary
+      if strcmpi(obj.scale,'dB')
+        cnr = 10*log10(cnr);
+      end
+      
+    end
     
     function area = patchArea(obj,radar)
       % Calculate the area of each clutter patch at a given range ring
@@ -74,7 +121,7 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       % patches. This should really be squared by the square of the noise
       % power, but I'm normalizing it to get consistent results with the
       % ward report
-      power_clutter = diag(radar.CNR(clutter));
+      power_clutter = diag(clutter.CNR(radar));
       
       % Steering vector
       angle_graze = asin(radar.position(3)/clutter.range);
