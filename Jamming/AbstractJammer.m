@@ -82,23 +82,16 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
       % Spatial frequency for steering vector computation
       freq_spatial = radar.antenna.spacing_element/radar.wavelength*...
         cos([jammer.elevation]).*sin([jammer.azimuth]);
-      N = radar.antenna.num_elements; % Number of array elements
-      M = radar.num_pulses;     % Number of pulses
-      Nj = numel(jammer);       % Number of clutter patches in ring
-      Aj = zeros(N, Nj);            % Space-time steering vector
       % Compute the spatial steering vector for each jammer and store them
       % in the columns of Aj
-      % TODO: Perform this computation without loops using meshgrid
-      for ii = 1:Nj
-        Aj(:,ii) = exp(1i*2*pi*freq_spatial(ii)*(0:N-1));
-      end
+      Aj = radar.antenna.spatialSteeringVector(freq_spatial);
       % J x J jammer source covariance matrix
-      jam_source_cov = diag(jammer.JNR(radar));
+      jam_source_cov = radar.power_noise*diag(jammer.JNR(radar));
       % N x J jammer spatial covariance matrix
       spatial_cov = Aj*jam_source_cov*Aj';
       % Complete space-time covariance matrix (assumes jammers are
       % uncorrelated in time)
-      Rj = kron(eye(M),spatial_cov);
+      Rj = kron(eye(radar.num_pulses),spatial_cov);
       
       
     end

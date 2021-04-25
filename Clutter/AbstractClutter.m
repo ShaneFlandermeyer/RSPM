@@ -121,7 +121,7 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       % patches. This should really be squared by the square of the noise
       % power, but I'm normalizing it to get consistent results with the
       % ward report
-      power_clutter = diag(clutter.CNR(radar));
+      power_clutter = radar.power_noise*diag(clutter.CNR(radar));
       
       % Steering vector
       angle_graze = asin(radar.position(3)/clutter.range);
@@ -130,20 +130,16 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       
       % Spatial frequency
       freq_spatial = eta*sin(clutter.az_center_patch);
-      % Normalized doppler shift (zero velocity misalignment)
-      freq_dopp_norm = beta*eta*sin(clutter.az_center_patch + 0);
-      
-      N = radar.antenna.num_elements; % Number of array elements
-      M = radar.num_pulses;           % Number of pulses per CPI
+      % Doppler shift (zero velocity misalignment)
+      freq_dopp = beta*eta*sin(clutter.az_center_patch + 0)*radar.prf;
+
       Nc = clutter.num_patches;       % Number of clutter patches in ring
-      a = zeros(N,Nc);                % Spatial steering vector
-      b = zeros(M,Nc);                % Temporal steering vector
-      Vc = zeros(M*N, Nc);            % Space-time steering vector
+      % Space-time steering vector
+      Vc = zeros(radar.num_pulses*radar.antenna.num_elements, Nc); 
       % Compute the space-time steering vector
-      % TODO: Perform this computation without loops using meshgrid
+      a = radar.antenna.spatialSteeringVector(freq_spatial);
+      b = radar.temporalSteeringVector(freq_dopp);
       for ii = 1:Nc
-        a(:,ii) = exp(1i*2*pi*freq_spatial(ii)*(0:N-1));
-        b(:,ii) = exp(1i*2*pi*freq_dopp_norm(ii)*(0:M-1));
         Vc(:,ii) = kron(b(:,ii),a(:,ii));
       end
       
