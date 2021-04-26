@@ -87,7 +87,7 @@ classdef Radar < AbstractRFSystem
     function range = trueRange(obj,targets)
       % For each target in the list, calculate the true range of the target from
       % the radar
-      range = vecnorm([targets(:).position]-obj.antenna.position)';
+      range = vecnorm([targets(:).position]-obj.position)';
     end % trueRange()
     
     function doppler = measuredDoppler(obj,targets)
@@ -145,6 +145,11 @@ classdef Radar < AbstractRFSystem
       % Calculates the received power for the list of targets from the RRE.
       % For now, assuming monostatic configuration (G_t = G_r)
       
+      if ~isa(obj.antenna,'AbstractAntennaArray')
+        % TODO: Make this an abstract method in the antenna classes
+        error('Calculation only holds for Antenna Array objects')
+      end
+      
       radar = copy(obj);
       radar.scale = 'Linear';
       radar.antenna.angle_unit = 'Radians';
@@ -154,17 +159,18 @@ classdef Radar < AbstractRFSystem
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
       % Get the antenna gain in the azimuth/elevation of the targets. Also
       % convert to linear units if we're working in dB
-      G = radar.antenna.power_gain*radar.antenna.normVoltageGain(az,el).^2;
+      G = radar.antenna.gain_element*radar.antenna.elements(1,1).normPowerGain(az,el);
       % Get the target ranges as seen by the radar
       ranges = radar.trueRange(targets);
       % Calculate the power from the RRE for each target
-      power = radar.antenna.tx_power*G.^2*radar.antenna.wavelength^2.*...
+      power = radar.power_tx*G.^2*radar.wavelength^2.*...
         [targets(:).rcs]'./((4*pi)^3*radar.loss_system*ranges.^4);
       
       % Convert back to dB if necessary
       if strcmpi(obj.scale,'dB')
         power = 10*log10(power);
       end
+      
     end % receivedPower()
     
     function pulses = pulseBurstWaveform(obj)

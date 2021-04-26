@@ -93,8 +93,8 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
       % uncorrelated in time)
       Rj = kron(eye(radar.num_pulses),spatial_cov);
       
-      
     end
+    
   end
   
   %% Setter Methods

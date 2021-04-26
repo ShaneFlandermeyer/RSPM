@@ -1,4 +1,4 @@
-% A class representing a basic point target. 
+% A class representing a basic point target.
 %
 % Blame: Shane Flandermeyer
 classdef (Abstract) AbstractTarget < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
@@ -23,6 +23,11 @@ classdef (Abstract) AbstractTarget < matlab.mixin.Copyable & matlab.mixin.Custom
     
   end
   
+  %% Public Methods
+  methods (Access = public)
+
+    
+  end
   %% Setter methods
   methods
     
@@ -62,7 +67,7 @@ classdef (Abstract) AbstractTarget < matlab.mixin.Copyable & matlab.mixin.Custom
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_rcs = val;
     end
-      
+    
     
   end
   
@@ -89,7 +94,7 @@ classdef (Abstract) AbstractTarget < matlab.mixin.Copyable & matlab.mixin.Custom
       out = obj.d_rcs;
     end
     
-
+    
   end
   
   %% Hidden Methods
@@ -111,7 +116,7 @@ classdef (Abstract) AbstractTarget < matlab.mixin.Copyable & matlab.mixin.Custom
     end
     
   end
- 
+  
   methods (Access = protected)
     
     function group = getPropertyGroups( obj )
