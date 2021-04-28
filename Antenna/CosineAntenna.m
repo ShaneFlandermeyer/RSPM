@@ -23,6 +23,8 @@ classdef CosineAntenna < AbstractAntenna
       %
       % OUTPUTS: 
       %  - gain: The normalized voltage pattern gain
+      %
+      % TODO: Take the mainbeam direction into account
       
       if nargin == 2
         % If only the azimuth angles are specified, assume zero elevation

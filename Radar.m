@@ -13,10 +13,14 @@ classdef Radar < AbstractRFSystem
       % Compute the space-time steering vector to the given spatial and
       % UNNORMALIZED doppler frequency (Hz)
       
-      if numel(freq_spatial) > 1 ||numel(freq_doppler) > 1  
-        error('This function currently only supports scalar inputs')
+      if numel(freq_spatial) ~= numel(freq_doppler)
+        error("Inputs must be the same size")
       end
-      
+%       
+%       if numel(freq_spatial) > 1 ||numel(freq_doppler) > 1  
+%         error('This function currently only supports scalar inputs')
+%       end
+%       
       % Calculate the spatial steering vector
       if ~isa(obj.antenna,'AbstractAntennaArray')
         % If the antenna is not an array, there is no steering
@@ -29,7 +33,10 @@ classdef Radar < AbstractRFSystem
       b = obj.temporalSteeringVector(freq_doppler);
       
       % Calculate the space-time steering vector
-      v = kron(b,a);
+      v = zeros(size(a,1)*size(b,1),length(freq_spatial));
+      for ii = 1:length(freq_spatial)
+        v(:,ii) = kron(b(:,ii),a(:,ii));
+      end
 
     end
     
@@ -97,7 +104,7 @@ classdef Radar < AbstractRFSystem
       % Calculate the measured doppler shift of each target in the list,
       % accounting for ambiguities
       doppler = zeros(numel(targets),1); % Pre-allocate
-      for ii = 1:length(doppler)
+      for ii = 1 : length(doppler)
         % Calculate the shift that would be measured with no ambiguities.
         % NOTE: We define negative doppler as moving towards the radar, so there
         % is a sign change.
