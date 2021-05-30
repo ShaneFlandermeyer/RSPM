@@ -146,7 +146,6 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       % Clutter covariance matrix
       Rc = Vc*power_clutter*Vc';
       
-      
     end
     
   end
