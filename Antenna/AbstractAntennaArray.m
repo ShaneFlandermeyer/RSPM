@@ -85,13 +85,13 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
     function set.angle_unit(obj,val)
       
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Degrees',1)
+      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angle_unit,'Degrees',1)
         % Convert angle measures to degree
         obj.d_angle_unit = 'Degrees';
         obj.convertToDegree();
         % Also update the individual element objects
         [obj.elements.angle_unit] = deal('Degrees');
-      elseif strncmpi(val,'Radians',1)
+      elseif strncmpi(val,'Radians',1)&& ~strncmpi(obj.angle_unit,'Radians',1)
         % Convert angle measures to radians
         obj.d_angle_unit = 'Radians';
         obj.convertToRadian();

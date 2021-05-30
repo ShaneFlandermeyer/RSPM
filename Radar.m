@@ -6,8 +6,107 @@
 %
 % Blame: Shane Flandermeyer
 classdef Radar < AbstractRFSystem
-%% Public Methods
+  
+  %% Private properties
+  properties (Access = private)
+    % List of parameters that should be updated when we change the scale
+    % from linear to dB or vice versa
+    power_list = {'loss_system','noise_fig'};
+  end
+  
+  % Members exposed to the outside world
+  properties (Dependent)
+    antenna;          % AbstractAntenna object
+    waveform;         % Waveform object
+    prf;              % Pulse repetition frequency (Hz)
+    pri;              % Pulse repetition interval (s)
+    num_pulses;       % Number of pulses in a CPI
+    range_unambig;    % Unambiguous range (m)
+    velocity_unambig; % Unambiguous velocity (m/s)
+    doppler_unambig;  % Unambiguous doppler frequency (Hz)
+    range_resolution; % Range resolution (m)
+    range_horizon;    % Range to the horizon
+  end
+  
+  % Internal class data
+  properties (Access = protected)
+    d_antenna;
+    d_waveform;
+    d_prf;
+    d_pri;
+    d_num_pulses;
+  end
+  
+  %% Public Methods
   methods
+    
+    function Ru = SMICovariance(obj,clutter,jammers,num_snapshots)
+      % Estimate the Interference covariane matrix for the given
+      % clutter and jammer objects using num_snapshots space-time
+      % snapshots of data. This function assumes the system noise and
+      % jammer amplitude variations over time follow a Gaussian
+      % distribution with amplitude proportional to the noise power
+      % and/or JNR. The clutter amplitude of each patch is assumed to
+      % be Gaussian distributed, but constant for each element/pulse
+      
+      
+      % Perform all calculations in linear units and with radian
+      % angles
+      radar = copy(obj);
+      clutter = copy(clutter);
+      jammers = copy(jammers);
+      radar.scale = 'Linear';
+      [clutter.scale] = deal('Linear');
+      [clutter.angle_unit] = deal('Radians');
+      [jammers.scale] = deal('Linear');
+      [jammers.angle_unit] = deal('Radians');
+      
+      M = radar.num_pulses; % Number of pulses
+      N = radar.antenna.num_elements; % Number of antenna elements
+      training_samps = zeros(M*N,num_snapshots);
+      
+      % Get the spatial steering vector for each jammer. The jammers
+      % are assumed to be temporally uncorrelated, so I'm calculating
+      % the temporal steering vector in the loop below
+      freq_spatial_jam = radar.antenna.spacing_element/radar.wavelength*...
+        cos([jammers.elevation]).*sin([jammers.azimuth]);
+      Aj = radar.antenna.spatialSteeringVector(freq_spatial_jam);
+      % Get the space-time steering vector for each clutter patch
+      [~,Vc] = clutter.covariance(radar);
+      % Total jammer contribution to training snapshot
+      jam = zeros(M*N,1);
+      jnr = jammers.JNR(radar); % Jammer to noise ratio
+      cnr = clutter.CNR(radar); % Clutter to noise ratio
+      % TODO: Make a method to generate jammer/clutter samples over
+      % time instead of doing it here. That would give the user more
+      % control over the distribution
+      for ii = 1 : num_snapshots
+        % Clutter Contributions
+        clut = (sqrt(radar.power_noise)/2*cnr.').*...
+          (rand(1,clutter.num_patches) + 1i*randn(1,clutter.num_patches));
+        clut = repmat(clut,M*N,1);
+        clut = sum(clut.*Vc,2);
+        
+        % Noise contributions
+        noise = (sqrt(radar.power_noise)/2)*(randn(M*N,1)+1i*randn(M*N,1));
+        
+        % Jammer contributions
+        for kk = 1 : length(jammers)
+          % Time-dependent jammer amplitude
+          jam_temporal = (sqrt(radar.power_noise)/2*jnr(kk))*...
+            (randn(M,1) + 1i*randn(M,1));
+          jam = jam + kron(jam_temporal, Aj(:,kk));
+        end
+        
+        % Total interference snapshot
+        training_samps(:,ii) = noise + jam + clut;
+      end
+      % Estimate the sample covariance matrix from the training data with
+      % Ward eq. (129), but subtract the mean
+      mean = 1/num_snapshots*sum(training_samps,2);
+      Ru = 1/num_snapshots*(training_samps*training_samps') - mean;
+      
+    end
     
     function v = spaceTimeSteeringVector(obj,freq_spatial,freq_doppler)
       % Compute the space-time steering vector to the given spatial and
@@ -16,11 +115,11 @@ classdef Radar < AbstractRFSystem
       if numel(freq_spatial) ~= numel(freq_doppler)
         error("Inputs must be the same size")
       end
-%       
-%       if numel(freq_spatial) > 1 ||numel(freq_doppler) > 1  
-%         error('This function currently only supports scalar inputs')
-%       end
-%       
+      %
+      %       if numel(freq_spatial) > 1 ||numel(freq_doppler) > 1
+      %         error('This function currently only supports scalar inputs')
+      %       end
+      %
       % Calculate the spatial steering vector
       if ~isa(obj.antenna,'AbstractAntennaArray')
         % If the antenna is not an array, there is no steering
@@ -37,13 +136,13 @@ classdef Radar < AbstractRFSystem
       for ii = 1:length(freq_spatial)
         v(:,ii) = kron(b(:,ii),a(:,ii));
       end
-
+      
     end
     
     function b = temporalSteeringVector(obj,freq_doppler)
       % Computes the temporal steering vector to an UNNORMALIZED doppler
       % frequency in Hz. If the input is a vector of size L, this function
-      % returns an M x L matrix, where M is the number of pulses per CPI 
+      % returns an M x L matrix, where M is the number of pulses per CPI
       % and each column in the matrix corresponds to a doppler shift from
       % the input
       
@@ -52,7 +151,7 @@ classdef Radar < AbstractRFSystem
       if ~isscalar(freq_doppler) && iscolumn(freq_doppler)
         freq_doppler = freq_doppler.';
       end
-
+      
       if numel(freq_doppler) == 1 % Scalar case
         b = exp(1i*2*pi*freq_doppler/obj.prf*(0:obj.num_pulses-1)');
       else % Vector case
@@ -62,20 +161,29 @@ classdef Radar < AbstractRFSystem
         freq_doppler = repmat(freq_doppler,obj.num_pulses,1);
         b = exp(1i*2*pi*freq_doppler/obj.prf.*M);
       end
-     
-    end 
+      
+    end
+    
+    function beta = clutterBeta(obj)
+      
+      if ~isa(obj.antenna,'AbstractAntennaArray')
+        error('Antenna must be an array (for now)')
+      end
+      
+      beta = 2*norm(obj.velocity)*obj.pri/obj.antenna.spacing_element;
+    end
     
     function rank = clutterRank(obj)
       % Calculates the clutter rank according to Brennan's rule.
       % That is, rc = round(N + (M-1)beta), where N is the number of antenna
-      % array elements, M is the number of pulses per CPI, and beta is the 
+      % array elements, M is the number of pulses per CPI, and beta is the
       % number of half interelement spacings traversed by the platform
       % during a single PRI
       
       if ~isa(obj.antenna,'AbstractAntennaArray')
         error('Antenna must be an array (for now)')
       end
-      beta = 2*norm(obj.velocity)*obj.pri/obj.antenna.spacing_element;
+      beta = obj.clutterBeta;
       rank = round(obj.antenna.num_elements + (obj.num_pulses-1)*beta);
       
     end
@@ -89,7 +197,7 @@ classdef Radar < AbstractRFSystem
         % vector
         range(ii) = mod(range(ii),obj.range_unambig);
       end
-    end % measuredRange()
+    end
     
     function range = trueRange(obj,targets)
       % For each target in the list, calculate the true range of the target from
@@ -128,7 +236,7 @@ classdef Radar < AbstractRFSystem
           doppler(ii) = aliased_doppler-obj.prf;
         end % if
       end % for
-    end % measuredDoppler()
+    end
     
     function velocity = measuredVelocity(obj,targets)
       % Calculate the velocity measured by the radar for each target in the
@@ -138,7 +246,7 @@ classdef Radar < AbstractRFSystem
       doppler = obj.measuredDoppler(targets);
       velocity = doppler*obj.antenna.wavelength/2;
       
-    end % measuredVelocity()
+    end
     
     function phase = roundTripPhase(obj,targets)
       
@@ -146,7 +254,7 @@ classdef Radar < AbstractRFSystem
       phase = -4*pi*obj.measuredRange(targets)/obj.antenna.wavelength;
       phase = mod(phase,2*pi);
       
-    end % roundTripPhase()
+    end
     
     function power = receivedPower(obj,targets)
       % Calculates the received power for the list of targets from the RRE.
@@ -178,7 +286,7 @@ classdef Radar < AbstractRFSystem
         power = 10*log10(power);
       end
       
-    end % receivedPower()
+    end
     
     function pulses = pulseBurstWaveform(obj)
       % Returns an LM x 1 pulse train, where L is the number of fast time
@@ -191,7 +299,7 @@ classdef Radar < AbstractRFSystem
       % Stack num_pulses padded pulses on top of each other
       pulses = repmat(padded_pulse,obj.num_pulses,1);
       
-    end % pulseBurstWaveform()
+    end
     
     function mf = pulseBurstMatchedFilter(obj)
       
@@ -199,7 +307,7 @@ classdef Radar < AbstractRFSystem
       % matched filter vector
       mf = flipud(conj(obj.pulseBurstWaveform()));
       
-    end % pulseBurstMatchedFilter()
+    end
     
     function pulses = pulseMatrix(obj)
       
@@ -213,7 +321,7 @@ classdef Radar < AbstractRFSystem
       % Stack num_pulses padded pulses on top of each other
       pulses = repmat(padded_pulse,1,obj.num_pulses);
       
-    end % pulseMatrix()
+    end
     
     function out = simulateTargets(obj,targets,data)
       
@@ -224,7 +332,7 @@ classdef Radar < AbstractRFSystem
       % INPUTS:
       %  - targets: The list of target objects
       %  - data: The data in which target responses are injected
-      % 
+      %
       % OUTPUT: The scaled and shifted target response
       
       radar = copy(obj);
@@ -282,7 +390,7 @@ classdef Radar < AbstractRFSystem
         out = reshape(out,numel(out),1);
       end
       
-    end % simulateTargets()
+    end
     
     function [mf_resp,range_axis] = matchedFilterResponse(obj,data)
       
@@ -323,7 +431,7 @@ classdef Radar < AbstractRFSystem
       time_axis = (idx-length(obj.waveform.data))/obj.waveform.samp_rate;
       range_axis = time_axis*(obj.const.c/2);
       
-    end % matchedFilterResponse()
+    end
     
     function [rd_map,velocity_axis] = dopplerProcessing(obj,data,oversampling)
       
@@ -356,10 +464,10 @@ classdef Radar < AbstractRFSystem
       velocity_axis = (-obj.velocity_unambig:velocity_step:...
         obj.velocity_unambig-velocity_step)';
       
-    end % dopplerProcessing()
+    end
     
     function snr = SNR(obj,targets)
-
+      
       % Compute the SNR for each target in the input list
       if (strcmpi(obj.scale,'db'))
         snr = obj.receivedPower(targets) - obj.power_noise;
@@ -369,35 +477,6 @@ classdef Radar < AbstractRFSystem
       
     end
     
-  end
-  %% Private properties
-  properties (Access = private)
-    % List of parameters that should be updated when we change the scale
-    % from linear to dB or vice versa
-    power_list = {'loss_system','noise_fig'};
-  end
-  
-  % Members exposed to the outside world
-  properties (Dependent)
-    antenna;          % AbstractAntenna object
-    waveform;         % Waveform object
-    prf;              % Pulse repetition frequency (Hz)
-    pri;              % Pulse repetition interval (s)
-    num_pulses;       % Number of pulses in a CPI
-    range_unambig;    % Unambiguous range (m)
-    velocity_unambig; % Unambiguous velocity (m/s)
-    doppler_unambig;  % Unambiguous doppler frequency (Hz)
-    range_resolution; % Range resolution (m)
-    range_horizon;    % Range to the horizon
-  end
-  
-  % Internal class data
-  properties (Access = protected)
-    d_antenna;
-    d_waveform;
-    d_prf;
-    d_pri;
-    d_num_pulses;
   end
   
   %% Setter Methods
@@ -429,8 +508,8 @@ classdef Radar < AbstractRFSystem
     function set.waveform(obj,val)
       
       validateattributes(val,{'Waveform'},{});
-       obj.d_waveform = val;
-       
+      obj.d_waveform = val;
+      
     end
     
     function set.antenna(obj,val)
@@ -486,8 +565,6 @@ classdef Radar < AbstractRFSystem
       out = obj.wavelength*obj.prf/4;
     end
   end
-  
-  
   
   %% Static Methods
   methods (Static)
