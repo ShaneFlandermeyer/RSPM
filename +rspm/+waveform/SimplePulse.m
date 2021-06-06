@@ -1,7 +1,7 @@
 % A class representing a simple pulse radar waveform
 %
 % Blame: Shane Flandermeyer
-classdef SimplePulse < PulsedWaveform
+classdef SimplePulse < rspm.waveform.AbstractPulsedWaveform
   
   %% Private Properties
   

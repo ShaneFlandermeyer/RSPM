@@ -1,6 +1,6 @@
 % A class representing a linear antenna array
 
-classdef LinearArray < AbstractAntennaArray
+classdef LinearArray < rspm.antenna.AbstractAntennaArray
   
   properties (Dependent)
     

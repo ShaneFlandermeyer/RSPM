@@ -5,7 +5,7 @@
 % - Add multistatic capabilities
 %
 % Blame: Shane Flandermeyer
-classdef Radar < AbstractRFSystem
+classdef Radar < rspm.system.AbstractRFSystem
   
   %% Private properties
   properties (Access = private)

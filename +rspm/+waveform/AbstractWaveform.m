@@ -2,7 +2,7 @@
 %
 % Blame: Shane Flandermeyer
 
-classdef  (Abstract) Waveform < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
+classdef (Abstract) AbstractWaveform < matlab.mixin.Copyable & matlab.mixin.CustomDisplay
   
   %% Public properties
   properties (Access = public)

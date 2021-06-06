@@ -5,7 +5,7 @@
 % sigma_0 = gamma*sin(psi_c)
 %
 % where gamma is a terrain-dependent paramter and psi_c is the grazing angle
-classdef ConstantGammaClutter < AbstractClutter
+classdef ConstantGammaClutter < rspm.clutter.AbstractClutter
   
   properties (Dependent)
 

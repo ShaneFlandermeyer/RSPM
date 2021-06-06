@@ -2,7 +2,7 @@
 %
 % Blame: Shane Flandermeyer
 
-classdef (Abstract) PulsedWaveform < Waveform
+classdef (Abstract) AbstractPulsedWaveform < rspm.waveform.AbstractWaveform
   properties (Abstract)
     pulse_width;     % Length of the pulse in seconds  
   end

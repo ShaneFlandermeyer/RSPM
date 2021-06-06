@@ -5,7 +5,7 @@
 % 
 % Blame: Shane Flandermeyer
 
-classdef LFM < PulsedWaveform
+classdef LFM < rspm.waveform.AbstractPulsedWaveform
   properties
     pulse_width; % Sweep interval (s)
     bandwidth;   % Sweep bandwidth (Hz)

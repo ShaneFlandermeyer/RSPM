@@ -1,4 +1,4 @@
-classdef BarrageJammer < AbstractJammer
+classdef BarrageJammer < rspm.jamming.AbstractJammer
   
   properties (Dependent)
     power_radiated_eff; % Effective radiated power (W/Hz)
