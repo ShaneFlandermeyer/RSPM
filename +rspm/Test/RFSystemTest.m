@@ -4,12 +4,12 @@ classdef AbstractRFSystemTest < matlab.unittest.TestCase
     function [radar,targets] = setup(testCase)
       % Radar System Parameters
       radar = Radar(); % Define a new radar object
-      radar.prf = 2e3;                 % Pulse repetition frequency (Hz)
-      radar.antenna.center_freq = 3e9; % Center frequency (Hz)
-      radar.temperature_noise = 270;   % Input Noise temperature (k)
-      radar.antenna.tx_power = 1e3;    % Transmit power (W)
-      radar.loss_system = 3;           % System loss (dB)
-      radar.noise_fig = 7;             % Noise figure (dB)
+      radar.PRF = 2e3;                 % Pulse repetition frequency (Hz)
+      radar.antenna.centerFreq = 3e9; % Center frequency (Hz)
+      radar.noiseTemperature = 270;   % Input Noise temperature (k)
+      radar.antenna.txPower = 1e3;    % Transmit power (W)
+      radar.systemLoss = 3;           % System loss (dB)
+      radar.noiseFig = 7;             % Noise figure (dB)
       radar.bandwidth = 5e6;           % Receiver bandwidth (Hz)
       % AbstractAntenna Parameters
       radar.antenna.width = 1.5;   % Width of the aperture

@@ -15,37 +15,37 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
   properties (Access = private)
     % A list of antenna parameters that are angles, used when switching
     % between radian mode and degree mode
-    angle_quantities = {'azimuth','elevation'};
-    power_quantities = {'backlobe_attenuation'};
-    voltage_quantities = {};
+    angleQuantities = {'azimuth','elevation'};
+    powerQuantities = {'backlobeAttenuation'};
+    voltageQuantities = {};
   end
   
   % Visible properties
   properties (Dependent)
-    angle_unit;           % Specify parameters in radian or degree
+    angleUnit;           % Specify parameters in radian or degree
     scale;                % Specify parameters in dB or radian
     azimuth;              % Azimuth angle of the antenna aperture w.r.t the x axis
     elevation;            % Elevation angle of the antenna aperture
-    mainbeam_direction;   % Cartesian (XYZ) antenna beam unit vector
+    mainbeamDirection;   % Cartesian (XYZ) antenna beam unit vector
     position;             % Cartesian (XYZ) antenna position
-    center_freq;          % Center frequency
-    tx_power;             % Tx power
+    centerFreq;          % Center frequency
+    txPower;             % Tx power
     wavelength;           % Carrier wavelength
-    backlobe_attenuation; % Backlobe power attenuation factor
+    backlobeAttenuation; % Backlobe power attenuation factor
   end
   
   % Hidden properties that store data
   properties (Access = protected)
-    d_angle_unit = 'Radians'; 
+    d_angleUnit = 'Radians'; 
     d_scale = 'dB'; 
     d_azimuth; 
     d_elevation;
-    d_mainbeam_direction; 
+    d_mainbeamDirection; 
     d_position; 
-    d_center_freq;       
-    d_tx_power;          
+    d_centerFreq;       
+    d_txPower;          
     d_wavelength;     
-    d_backlobe_attenuation = 0;
+    d_backlobeAttenuation = 0;
   end
   
   % Abstract properties
@@ -74,10 +74,10 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
   %% Setter methods
   methods
     
-    function set.backlobe_attenuation(obj,val)
+    function set.backlobeAttenuation(obj,val)
       
       validateattributes(val,{'numeric'},{'scalar','nonnan'});
-      obj.d_backlobe_attenuation = val;
+      obj.d_backlobeAttenuation = val;
       
     end
     
@@ -96,16 +96,16 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
       
     end
     
-    function set.angle_unit(obj,val)
+    function set.angleUnit(obj,val)
       
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angle_unit,'Degrees',1)
+      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angleUnit,'Degrees',1)
         % Convert angle measures to degree
-        obj.d_angle_unit = 'Degrees';
+        obj.d_angleUnit = 'Degrees';
         obj.convertToDegree();
-      elseif strncmpi(val,'Radians',1) && ~strncmpi(obj.angle_unit,'Radians',1)
+      elseif strncmpi(val,'Radians',1) && ~strncmpi(obj.angleUnit,'Radians',1)
         % Convert angle measures to radians
-        obj.d_angle_unit = 'Radians';
+        obj.d_angleUnit = 'Radians';
         obj.convertToRadian();
       end
       
@@ -125,7 +125,7 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
       
     end
     
-    function set.mainbeam_direction(obj,val)
+    function set.mainbeamDirection(obj,val)
       
       validateattributes(val,{'numeric'},...
         {'vector','3d','finite','nonnan'});
@@ -133,17 +133,17 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
         val = val.';
       end
       val = val ./ norm(val); % Normalize to unit vector
-      obj.d_mainbeam_direction = val; % Set object property
+      obj.d_mainbeamDirection = val; % Set object property
       [obj.azimuth,obj.elevation] = ...
-        cart2sph(obj.mainbeam_direction(1),...
-        obj.mainbeam_direction(2),obj.mainbeam_direction(3));
+        cart2sph(obj.mainbeamDirection(1),...
+        obj.mainbeamDirection(2),obj.mainbeamDirection(3));
       
     end
     
-    function set.tx_power(obj,val)
+    function set.txPower(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_tx_power = val;
+      obj.d_txPower = val;
       
     end
     
@@ -151,15 +151,15 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_wavelength = val;
-      obj.d_center_freq = obj.const.c/obj.wavelength;
+      obj.d_centerFreq = obj.const.c/obj.wavelength;
       
     end
     
-    function set.center_freq(obj,val)
+    function set.centerFreq(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_center_freq = val;
-      obj.d_wavelength = obj.const.c/obj.center_freq;
+      obj.d_centerFreq = val;
+      obj.d_wavelength = obj.const.c/obj.centerFreq;
       
     end
     
@@ -181,12 +181,12 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
   %% Getter methods
   methods
     
-    function power = get.backlobe_attenuation(obj)
-      power = obj.d_backlobe_attenuation;
+    function power = get.backlobeAttenuation(obj)
+      power = obj.d_backlobeAttenuation;
     end
     
-    function mode = get.angle_unit(obj)
-      mode = obj.d_angle_unit;
+    function mode = get.angleUnit(obj)
+      mode = obj.d_angleUnit;
     end
     
     function scale = get.scale(obj)
@@ -201,20 +201,20 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
       elevation = obj.d_elevation;
     end
     
-    function mainbeam_direction = get.mainbeam_direction(obj)
-      mainbeam_direction = obj.d_mainbeam_direction;
+    function mainbeamDirection = get.mainbeamDirection(obj)
+      mainbeamDirection = obj.d_mainbeamDirection;
     end
     
     function position = get.position(obj)
       position = obj.d_position;
     end
     
-    function center_freq = get.center_freq(obj)
-      center_freq = obj.d_center_freq;
+    function centerFreq = get.centerFreq(obj)
+      centerFreq = obj.d_centerFreq;
     end
     
-    function tx_power = get.tx_power(obj)
-      tx_power = obj.d_tx_power;
+    function txPower = get.txPower(obj)
+      txPower = obj.d_txPower;
     end
     
     function wavelength = get.wavelength(obj)
@@ -250,11 +250,11 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all parameters that are currently in linear units to dB
     function convertTodB(obj)
       
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10*log10(obj.(obj.powerQuantities{ii}));
       end
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 20*log10(obj.(obj.voltageQuantities{ii}));
       end
       
     end
@@ -262,11 +262,11 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all parameters that are currently in dB to linear units
     function convertToLinear(obj)
       
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10^(obj.(obj.powerQuantities{ii})/10);
       end
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 10^(obj.(obj.voltageQuantities{ii})/20);
       end
       
     end
@@ -274,8 +274,8 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all angle measures to degree
     function convertToDegree(obj)
       
-      for ii = 1:numel(obj.angle_quantities)
-        obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
+      for ii = 1:numel(obj.angleQuantities)
+        obj.(obj.angleQuantities{ii}) = (180/pi)*obj.(obj.angleQuantities{ii});
       end
       
     end
@@ -283,8 +283,8 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all angle measures to radians
     function convertToRadian(obj)
       
-      for ii = 1:numel(obj.angle_quantities)
-        obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
+      for ii = 1:numel(obj.angleQuantities)
+        obj.(obj.angleQuantities{ii}) = (pi/180)*obj.(obj.angleQuantities{ii});
       end
       
     end
@@ -300,7 +300,7 @@ classdef (Abstract) AbstractAntenna < matlab.mixin.Copyable & matlab.mixin.Custo
       % Put the properties list in sorted order
       propList = sort( builtin("properties", obj) );
       % Move any control switch parameters to the top of the output
-      switches = {'scale','angle_unit'}';
+      switches = {'scale','angleUnit'}';
       propList(ismember(propList,switches)) = [];
       propList = cat(1,switches,propList);
       if nargout == 0

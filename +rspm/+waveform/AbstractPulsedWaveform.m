@@ -4,18 +4,18 @@
 
 classdef (Abstract) AbstractPulsedWaveform < rspm.waveform.AbstractWaveform
   properties (Abstract)
-    pulse_width;     % Length of the pulse in seconds  
+    pulsewidth;     % Length of the pulse in seconds  
   end
   
   properties (Dependent, Access = public)
-    time_bandwidth;  % Time-bandwidth product for the waveform
+    timeBandwidthProd;  % Time-bandwidth product for the waveform
   end
   
   %% Getters/Setters
   methods
-    function bt = get.time_bandwidth(obj)
+    function bt = get.timeBandwidthProd(obj)
       % Calculate the time-bandwidth product of the waveform
-      bt = obj.pulse_width*obj.bandwidth;
+      bt = obj.pulsewidth*obj.bandwidth;
     end
   end
  
@@ -51,7 +51,7 @@ classdef (Abstract) AbstractPulsedWaveform < rspm.waveform.AbstractWaveform
         af(ii,:) = abs(ifftshift(ifft(obj.data.*conj(v),num_doppler)));
       end
       af = af*num_doppler; % Scaling factor
-      t = delays/obj.samp_rate;
+      t = delays/obj.sampleRate;
     end
     
   end

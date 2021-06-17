@@ -4,26 +4,26 @@ classdef LinearArray < rspm.antenna.AbstractAntennaArray
   
   properties (Dependent)
     
-    element_pattern;    % Element beampattern
-    gain_element;       % Element Gain
-    spacing_element;    % Element spacing
-    angle_steering;     % Steering angle
-    gain_tx;            % Tx Gain
-    gain_rx;            % Rx Gain
-    mainbeam_direction; % Array mainbeam unit vector
-    array_normal;       % Array normal direction unit vector
+    elementPattern;    % Element beampattern
+    elementGain;       % Element Gain
+    elementSpacing;    % Element spacing
+    steeringAngle;     % Steering angle
+    txGain;            % Tx Gain
+    rxGain;            % Rx Gain
+    mainbeamDirection; % Array mainbeam unit vector
+    arrayNormal;       % Array normal direction unit vector
   end
   
   properties (Access = protected)
     
-    d_element_pattern = 'Cosine';
-    d_gain_element;
-    d_spacing_element;
-    d_angle_steering = 0;
-    d_gain_tx;
-    d_gain_rx;
-    d_mainbeam_direction = [1;0;0];
-    d_array_normal = [1;0;0];
+    d_elementPattern = 'Cosine';
+    d_elementGain;
+    d_elementSpacing;
+    d_steeringAngle = 0;
+    d_txGain;
+    d_rxGain;
+    d_mainbeamDirection = [1;0;0];
+    d_arrayNormal = [1;0;0];
   end
   
   %% Constructors
@@ -34,9 +34,9 @@ classdef LinearArray < rspm.antenna.AbstractAntennaArray
       
       % Add quantities that need to be converted when we change the scale
       % (linear <-> dB) or the angle unit (degree<->radian)
-      obj.power_quantities = [obj.power_quantities];
-      obj.voltage_quantities = [obj.voltage_quantities];
-      obj.angle_quantities = [obj.angle_quantities;{'angle_steering'}];
+      obj.powerQuantities = [obj.powerQuantities];
+      obj.voltageQuantities = [obj.voltageQuantities];
+      obj.angleQuantities = [obj.angleQuantities;{'steeringAngle'}];
     end
     
   end
@@ -47,22 +47,22 @@ classdef LinearArray < rspm.antenna.AbstractAntennaArray
       
       % Convert everything to radians before doing the calculation
       was_degrees = false;
-      if strcmpi(obj.angle_unit,'Degrees')
+      if strcmpi(obj.angleUnit,'Degrees')
         was_degrees = true;
         angle = (pi/180)*angle;
-        obj.angle_unit = 'Radians';
+        obj.angleUnit = 'Radians';
       end
       
       % Calculate the array factor for each input angle
       AF = zeros(length(angle),1);
       for ii = 1:length(angle)
-        AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.spacing_element*...
-          (0:obj.num_elements-1)*(sin(angle(ii)) - sin(obj.angle_steering))));
+        AF(ii) = sum(exp(-1i*2*pi/obj.wavelength*obj.elementSpacing*...
+          (0:obj.nElements-1)*(sin(angle(ii)) - sin(obj.steeringAngle))));
       end
       
       % Convert back to degrees if necessary
       if was_degrees
-        obj.angle_unit = 'Degrees';
+        obj.angleUnit = 'Degrees';
       end
       
       % Convert to dB if necessary
@@ -76,76 +76,76 @@ classdef LinearArray < rspm.antenna.AbstractAntennaArray
   %% Setter Methods
   methods
     
-    function set.array_normal(obj,val)
+    function set.arrayNormal(obj,val)
       validateattributes(val,{'numeric'},{'3d'})
       % Make it a column vector
       if isrow(val)
         val = val.';
       end
-      obj.array_normal = val./norm(val);
+      obj.arrayNormal = val./norm(val);
     end
     
-    function set.mainbeam_direction(obj,val)
+    function set.mainbeamDirection(obj,val)
       validateattributes(val,{'numeric'},{'3d'})
       % Make it a column vector
       if isrow(val)
         val = val.';
       end
-      obj.d_mainbeam_direction = val./norm(val);
-      obj.d_angle_steering = -atan2d(val(1)*obj.array_normal(2)-...
-        obj.array_normal(1)*val(2),val(1)*val(2)+obj.array_normal(1)*obj.array_normal(2));
+      obj.d_mainbeamDirection = val./norm(val);
+      obj.d_steeringAngle = -atan2d(val(1)*obj.arrayNormal(2)-...
+        obj.arrayNormal(1)*val(2),val(1)*val(2)+obj.arrayNormal(1)*obj.arrayNormal(2));
     end
     
-    function set.gain_tx(obj,val)
+    function set.txGain(obj,val)
       validateattributes(val,{'numeric'},{'finite','nonnan'})
-      obj.d_gain_tx = val;
+      obj.d_txGain = val;
     end
     
-    function set.gain_rx(obj,val)
+    function set.rxGain(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'})
-      obj.d_gain_rx = val;
+      obj.d_rxGain = val;
       
     end
     
-    function set.angle_steering(obj,val)
+    function set.steeringAngle(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_angle_steering = val;
-      if strcmpi(obj.angle_unit,'Radians')
-        R = YPRMatrix(obj.d_angle_steering);
+      obj.d_steeringAngle = val;
+      if strcmpi(obj.angleUnit,'Radians')
+        R = YPRMatrix(obj.d_steeringAngle);
       else
-        R = YPRMatrix(obj.d_angle_steering,[],[],'Degrees');
+        R = YPRMatrix(obj.d_steeringAngle,[],[],'Degrees');
       end
-      obj.d_mainbeam_direction = R*obj.array_normal;
+      obj.d_mainbeamDirection = R*obj.arrayNormal;
       
     end
     
-    function set.spacing_element(obj,val)
+    function set.elementSpacing(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'})
-      obj.d_spacing_element = val;
+      obj.d_elementSpacing = val;
       
     end
     
     
-    function set.element_pattern(obj,val)
+    function set.elementPattern(obj,val)
       
       validateattributes(val,{'string','char'},{});
-      obj.d_element_pattern = val;
-      switch obj.d_element_pattern
+      obj.d_elementPattern = val;
+      switch obj.d_elementPattern
         case 'Cosine'
-          obj.elements = CosineAntenna([obj.num_elements,1]);
+          obj.elements = CosineAntenna([obj.nElements,1]);
         otherwise
           error('Element pattern not supported')
       end
       
     end
     
-    function set.gain_element(obj,val)
+    function set.elementGain(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'})
-      obj.d_gain_element = val;
+      obj.d_elementGain = val;
       
     end
     
@@ -153,37 +153,37 @@ classdef LinearArray < rspm.antenna.AbstractAntennaArray
   %% Getter Methods
   methods
     
-    function out = get.array_normal(obj)
-      out = obj.d_array_normal;
+    function out = get.arrayNormal(obj)
+      out = obj.d_arrayNormal;
     end
     
-    function out = get.mainbeam_direction(obj)
-      out = obj.d_mainbeam_direction;
+    function out = get.mainbeamDirection(obj)
+      out = obj.d_mainbeamDirection;
     end
     
-    function out = get.gain_tx(obj)
-      out = obj.d_gain_tx;
+    function out = get.txGain(obj)
+      out = obj.d_txGain;
     end
     
-    function out = get.gain_rx(obj)
-      out = obj.d_gain_rx;
+    function out = get.rxGain(obj)
+      out = obj.d_rxGain;
     end
     
-    function out = get.angle_steering(obj)
-      out = obj.d_angle_steering;
+    function out = get.steeringAngle(obj)
+      out = obj.d_steeringAngle;
     end
     
-    function out = get.spacing_element(obj)
-      out = obj.d_spacing_element;
+    function out = get.elementSpacing(obj)
+      out = obj.d_elementSpacing;
     end
     
     
-    function out = get.element_pattern(obj)
-      out = obj.d_element_pattern;
+    function out = get.elementPattern(obj)
+      out = obj.d_elementPattern;
     end
     
-    function out = get.gain_element(obj)
-      out = obj.d_gain_element;
+    function out = get.elementGain(obj)
+      out = obj.d_elementGain;
     end
     
   end

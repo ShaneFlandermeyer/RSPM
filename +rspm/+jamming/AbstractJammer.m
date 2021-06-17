@@ -7,14 +7,14 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
     properties (Access = protected)
         % A list of antenna parameters that are angles, used when switching
         % between radian mode and degree mode
-        angle_quantities = {'azimuth','elevation'};
-        power_quantities = {};
-        voltage_quantities = {};
+        angleQuantities = {'azimuth','elevation'};
+        powerQuantities = {};
+        voltageQuantities = {};
     end
     
     properties (Dependent)
         
-        angle_unit;
+        angleUnit;
         scale;
         azimuth;
         elevation;
@@ -25,7 +25,7 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
     
     properties (Access = protected)
         
-        d_angle_unit = 'Radians';
+        d_angleUnit = 'Radians';
         d_scale = 'dB';
         d_azimuth;
         d_elevation;
@@ -49,17 +49,17 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
             radar = copy(radar);
             jammer = copy(obj);
             radar.scale = 'Linear';
-            radar.antenna.angle_unit = 'Radians';
-            [jammer.angle_unit] = deal('Radians');
+            radar.antenna.angleUnit = 'Radians';
+            [jammer.angleUnit] = deal('Radians');
             % Receive element gain. Since the JNR is per element, we do not include
             % the Re
             g = radar.antenna.elements(1,1).normPowerGain([jammer.azimuth],[jammer.elevation])*...
-                radar.antenna.gain_element;
+                radar.antenna.elementGain;
             % Jammer power
-            J0 = [jammer.power_radiated_eff]*radar.bandwidth.*g*radar.wavelength^2 ./ ...
-                ((4*pi)^2*[jammer.range].^2*radar.loss_system);
+            J0 = [jammer.effRadiatedPower]*radar.bandwidth.*g*radar.wavelength^2 ./ ...
+                ((4*pi)^2*[jammer.range].^2*radar.systemLoss);
             % JNR
-            jnr = J0.'/radar.power_noise;
+            jnr = J0.'/radar.noisePower;
             
             for ii = 1:length(jammer)
                 if strcmpi(jammer(ii).scale,'dB')
@@ -79,21 +79,21 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
             jammer = copy(obj);
             radar = copy(radar);
             [jammer.scale] = deal('Linear');
-            [jammer.angle_unit] = deal('Radians');
+            [jammer.angleUnit] = deal('Radians');
             radar.scale = 'Linear';
             % Spatial frequency for steering vector computation
-            freq_spatial = radar.antenna.spacing_element/radar.wavelength*...
+            freq_spatial = radar.antenna.elementSpacing/radar.wavelength*...
                 cos([jammer.elevation]).*sin([jammer.azimuth]);
             % Compute the spatial steering vector for each jammer and store them
             % in the columns of Aj
             Aj = radar.antenna.spatialSteeringVector(freq_spatial);
             % J x J jammer source covariance matrix
-            jam_source_cov = radar.power_noise*diag(jammer.JNR(radar));
+            jam_source_cov = radar.noisePower*diag(jammer.JNR(radar));
             % N x J jammer spatial covariance matrix
             spatial_cov = Aj*jam_source_cov*Aj';
             % Complete space-time covariance matrix (assumes jammers are
             % uncorrelated in time)
-            Rj = kron(eye(radar.num_pulses),spatial_cov);
+            Rj = kron(eye(radar.nPulses),spatial_cov);
             
         end
         
@@ -143,16 +143,16 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
             
         end
         
-        function set.angle_unit(obj,val)
+        function set.angleUnit(obj,val)
             
             validateattributes(val,{'string','char'},{});
-            if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angle_unit,'Degrees',1)
+            if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angleUnit,'Degrees',1)
                 % Convert angle measures to degree
-                obj.d_angle_unit = 'Degrees';
+                obj.d_angleUnit = 'Degrees';
                 obj.convertToDegree();
-            elseif strncmpi(val,'Radians',1) && ~strncmpi(obj.angle_unit,'Radians',1)
+            elseif strncmpi(val,'Radians',1) && ~strncmpi(obj.angleUnit,'Radians',1)
                 % Convert angle measures to radians
-                obj.d_angle_unit = 'Radians';
+                obj.d_angleUnit = 'Radians';
                 obj.convertToRadian();
             end
             
@@ -167,8 +167,8 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
             out = obj.d_position;
         end
         
-        function out = get.angle_unit(obj)
-            out = obj.d_angle_unit;
+        function out = get.angleUnit(obj)
+            out = obj.d_angleUnit;
         end
         
         function out = get.scale(obj)
@@ -193,23 +193,23 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
         
         % Convert all parameters that are currently in linear units to dB
         function convertTodB(obj)
-            for ii = 1:numel(obj.power_quantities)
-                obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
+            for ii = 1:numel(obj.powerQuantities)
+                obj.(obj.powerQuantities{ii}) = 10*log10(obj.(obj.powerQuantities{ii}));
             end
-            for ii = 1:numel(obj.voltage_quantities)
-                obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
+            for ii = 1:numel(obj.voltageQuantities)
+                obj.(obj.voltageQuantities{ii}) = 20*log10(obj.(obj.voltageQuantities{ii}));
             end
         end
         
         % Convert all parameters that are currently in dB to linear units
         function convertToLinear(obj)
             
-            for ii = 1:numel(obj.power_quantities)
-                obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
+            for ii = 1:numel(obj.powerQuantities)
+                obj.(obj.powerQuantities{ii}) = 10^(obj.(obj.powerQuantities{ii})/10);
             end
             
-            for ii = 1:numel(obj.voltage_quantities)
-                obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
+            for ii = 1:numel(obj.voltageQuantities)
+                obj.(obj.voltageQuantities{ii}) = 10^(obj.(obj.voltageQuantities{ii})/20);
             end
             
         end
@@ -217,8 +217,8 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
         % Convert all angle measures to degree
         function convertToDegree(obj)
             
-            for ii = 1:numel(obj.angle_quantities)
-                obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
+            for ii = 1:numel(obj.angleQuantities)
+                obj.(obj.angleQuantities{ii}) = (180/pi)*obj.(obj.angleQuantities{ii});
             end
             
         end
@@ -226,8 +226,8 @@ classdef (Abstract) AbstractJammer < matlab.mixin.Copyable & matlab.mixin.Custom
         % Convert all angle measures to radians
         function convertToRadian(obj)
             
-            for ii = 1:numel(obj.angle_quantities)
-                obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
+            for ii = 1:numel(obj.angleQuantities)
+                obj.(obj.angleQuantities{ii}) = (pi/180)*obj.(obj.angleQuantities{ii});
             end
             
         end

@@ -26,7 +26,7 @@ classdef ConstantGammaClutter < rspm.clutter.AbstractClutter
       % Compute the radar cross section of each clutter patch in the 
       % range ring
       
-      if ~strcmpi(obj.earth_model,'Flat')
+      if ~strcmpi(obj.earthModel,'Flat')
         error('The assumptions for this computation currently only hold for the flat earth model.')
       end
       

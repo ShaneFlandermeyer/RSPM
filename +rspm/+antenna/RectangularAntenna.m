@@ -8,9 +8,9 @@ classdef RectangularAntenna < rspm.antenna.AbstractAntenna
     width;                   % Width of the antenna aperture
     height;                  % Height of the antenna aperture
     area;                    % Aperture area
-    beamwidth_azimuth_3db;   % 3db beamwidth in azimuth
-    beamwidth_elevation_3db; % 3db beamwidth in elevation
-    power_gain;              % Power gain
+    azBeamwidth3db;   % 3db beamwidth in azimuth
+    elBeamwidth3db; % 3db beamwidth in elevation
+    powerGain;              % Power gain
   end
   
   % Properties that store the data
@@ -49,25 +49,25 @@ classdef RectangularAntenna < rspm.antenna.AbstractAntenna
       area = obj.width*obj.height;
     end
     
-    function beamwidth = get.beamwidth_azimuth_3db(obj)
+    function beamwidth = get.azBeamwidth3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.width;
-      if (strncmpi(obj.angle_unit,'Degrees',1))
+      if (strncmpi(obj.angleUnit,'Degrees',1))
         beamwidth = (180/pi)*beamwidth;
       end
     end
     
-    function beamwidth = get.beamwidth_elevation_3db(obj)
+    function beamwidth = get.elBeamwidth3db(obj)
       beamwidth = 0.89*obj.wavelength/obj.height;
-      if (strncmpi(obj.angle_unit,'Degrees',1))
+      if (strncmpi(obj.angleUnit,'Degrees',1))
         beamwidth = (180/pi)*beamwidth;
       end
     end
     
-    function gain = get.power_gain(obj)
-      if strncmpi(obj.angle_unit,'Degrees',1)
-        gain = 26e3/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
+    function gain = get.powerGain(obj)
+      if strncmpi(obj.angleUnit,'Degrees',1)
+        gain = 26e3/(obj.azBeamwidth3db*obj.elBeamwidth3db);
       else
-        gain = 7.9/(obj.beamwidth_azimuth_3db*obj.beamwidth_elevation_3db);
+        gain = 7.9/(obj.azBeamwidth3db*obj.elBeamwidth3db);
       end
       % Convert to dB if necessary
       if (strncmpi(obj.scale,'db',1))
@@ -98,14 +98,14 @@ classdef RectangularAntenna < rspm.antenna.AbstractAntenna
         was_db = true;
       end
         
-      if strncmpi(obj.angle_unit,'Radians',1)
+      if strncmpi(obj.angleUnit,'Radians',1)
         % Get the separable azimuth component
         az_pattern = sinc(obj.width/obj.wavelength*sin(az));
         % Get the separable elevation component
         el_pattern = sinc(obj.height/obj.wavelength*sin(el));
         gain = abs(az_pattern.*el_pattern);
         % If the angle is in the backlobe, attenuate it
-        gain(abs(az) >= pi/2) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= pi/2);
+        gain(abs(az) >= pi/2) = sqrt(obj.backlobeAttenuation)*gain(abs(az) >= pi/2);
       else 
         % Same calculations as above, but with az/el in degrees
         az_pattern = sinc(obj.width/obj.wavelength*sind(az));
@@ -113,7 +113,7 @@ classdef RectangularAntenna < rspm.antenna.AbstractAntenna
         el_pattern = sinc(obj.height/obj.wavelength*sind(el));
         gain = abs(az_pattern.*el_pattern);
         % If the angle is in the backlobe, attenuate it
-        gain(abs(az) >= 90) = sqrt(obj.backlobe_attenuation)*gain(abs(az) >= 90);
+        gain(abs(az) >= 90) = sqrt(obj.backlobeAttenuation)*gain(abs(az) >= 90);
       end
       
       % Convert back to dB

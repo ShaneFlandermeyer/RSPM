@@ -36,16 +36,16 @@ classdef CosineAntenna < rspm.antenna.AbstractAntenna
       ant = copy(obj);
       ant.scale = 'Linear';
       
-      if strncmpi(ant.angle_unit,'Radians',1)
+      if strncmpi(ant.angleUnit,'Radians',1)
         % Radians angles
         gain = abs(cos(az).*cos(el));
         % If the angle is in the backlobe, attenuate it
-        gain(abs(az) >= pi/2) = sqrt(ant.backlobe_attenuation)*gain(abs(az) >= pi/2);
+        gain(abs(az) >= pi/2) = sqrt(ant.backlobeAttenuation)*gain(abs(az) >= pi/2);
       else
         % Degrees angles
         gain = abs(cosd(az).*cosd(el));
         % If the angle is in the backlobe, attenuate it
-        gain(abs(az) >= 90) = sqrt(ant.backlobe_attenuation)*gain(abs(az) >= 90);
+        gain(abs(az) >= 90) = sqrt(ant.backlobeAttenuation)*gain(abs(az) >= 90);
       end
       
       % Convert back to dB

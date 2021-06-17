@@ -9,35 +9,35 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
   end
   
   properties (Access = private)
-    angle_quantities = {'span_azimuth','span_azimuth_patch','az_center','az_center_patch'};
-    voltage_quantities = {};
-    power_quantities = {'gamma'};
+    angleQuantities = {'azimuthSpan','azimuthSpanPatch','azimuthCenter','azimuthCenterPatch'};
+    voltageQuantities = {};
+    powerQuantities = {'gamma'};
   end
   
   properties (Dependent)
-    angle_unit;
+    angleUnit;
     scale;
     range;              % Distance of range ring from the radar
-    earth_model;        % Earth model (currently only supports flat)
-    span_azimuth;       % Azimuth span of the whole clutter ring
-    span_azimuth_patch; % Azimuth span of individual clutter patches
-    num_patches;        % Number of clutter patches in range ring
-    az_center;          % Angle around which clutter patches are centered
+    earthModel;        % Earth model (currently only supports flat)
+    azimuthSpan;       % Azimuth span of the whole clutter ring
+    azimuthSpanPatch; % Azimuth span of individual clutter patches
+    nPatches;        % Number of clutter patches in range ring
+    azimuthCenter;          % Angle around which clutter patches are centered
     % Vector containing the azimuth of the center of each clutter patch in 
     % the range ring
-    az_center_patch;
+    azimuthCenterPatch;
     
   end
   
   properties (Access = protected)
-    d_angle_unit = 'Radians';
+    d_angleUnit = 'Radians';
     d_scale = 'dB';
     d_range;
-    d_earth_model = 'Flat';
-    d_span_azimuth;
-    d_span_azimuth_patch;
-    d_az_center = 0;
-    d_az_center_patch;
+    d_earthModel = 'Flat';
+    d_azimuthSpan;
+    d_azimuthSpanPatch;
+    d_azimuthCenter = 0;
+    d_azimuthCenterPatch;
     
   end
   
@@ -63,26 +63,26 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       % linear/radians
       radar = copy(radar);
       radar.scale = 'Linear';
-      radar.antenna.angle_unit = 'Radians';
+      radar.antenna.angleUnit = 'Radians';
       
       clutter = copy(obj);
       clutter.scale = 'Linear';
-      clutter.angle_unit = 'Radians';
+      clutter.angleUnit = 'Radians';
       
       % Array factor
-      AF = radar.antenna.arrayFactor(clutter.az_center_patch);
+      AF = radar.antenna.arrayFactor(clutter.azimuthCenterPatch);
       % Full array transmit gain
-      Gt = radar.antenna.gain_tx*(abs(AF).^2).*...
-        radar.antenna.elements(1,1).normPowerGain(clutter.az_center_patch);
+      Gt = radar.antenna.txGain*(abs(AF).^2).*...
+        radar.antenna.elements(1,1).normPowerGain(clutter.azimuthCenterPatch);
       % Fuull array receive gain
-      g = radar.antenna.gain_element*radar.antenna.gain_rx*...
-        radar.antenna.elements(1,1).normPowerGain(clutter.az_center_patch);
+      g = radar.antenna.elementGain*radar.antenna.rxGain*...
+        radar.antenna.elements(1,1).normPowerGain(clutter.azimuthCenterPatch);
       % AbstractClutter RCS
       sigma = clutter.patchRCS(radar);
       
       % CNR 
-      cnr = radar.power_tx*Gt.*g*radar.wavelength^2*sigma/((4*pi)^3*...
-        radar.power_noise*radar.loss_system*clutter.range^4);
+      cnr = radar.txPower*Gt.*g*radar.wavelength^2*sigma/((4*pi)^3*...
+        radar.noisePower*radar.systemLoss*clutter.range^4);
       
       % Convert to dB if necessary
       if strcmpi(obj.scale,'dB')
@@ -95,9 +95,9 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       % Calculate the area of each clutter patch at a given range ring
       
       % AbstractClutter patch azimuth width
-      width_az = 2*pi/obj.num_patches;
+      width_az = 2*pi/obj.nPatches;
       % AbstractClutter patch range extent
-      width_range = radar.range_resolution;
+      width_range = radar.rangeResolution;
       % Grazing/elevation angle for the FLAT EARTH case
       angle_graze = asin(radar.position(3)/obj.range);
       % Area according to ward eq.(56)
@@ -114,28 +114,28 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       clutter = copy(obj);
       radar = copy(radar);
       clutter.scale = 'Linear';
-      clutter.angle_unit = 'Radians';
+      clutter.angleUnit = 'Radians';
       radar.scale = 'Linear';
       
       % Clutter power distribution, assuming clutter is UNCORRELATED across
       % patches. This should really be squared by the square of the noise
       % power, but I'm normalizing it to get consistent results with the
       % ward report
-      power_clutter = radar.power_noise*diag(clutter.CNR(radar));
+      power_clutter = radar.noisePower*diag(clutter.CNR(radar));
       
       % Steering vector
       angle_graze = asin(radar.position(3)/clutter.range);
-      eta = radar.antenna.spacing_element*cos(angle_graze)/radar.wavelength;
-      beta = 2*norm(radar.velocity)*radar.pri/radar.antenna.spacing_element;
+      eta = radar.antenna.elementSpacing*cos(angle_graze)/radar.wavelength;
+      beta = 2*norm(radar.velocity)*radar.PRI/radar.antenna.elementSpacing;
       
       % Spatial frequency
-      freq_spatial = eta*sin(clutter.az_center_patch);
+      freq_spatial = eta*sin(clutter.azimuthCenterPatch);
       % Doppler shift (zero velocity misalignment)
-      freq_dopp = beta*eta*sin(clutter.az_center_patch + 0)*radar.prf;
+      freq_dopp = beta*eta*sin(clutter.azimuthCenterPatch + 0)*radar.PRF;
 
-      Nc = clutter.num_patches;       % Number of clutter patches in ring
+      Nc = clutter.nPatches;       % Number of clutter patches in ring
       % Space-time steering vector
-      Vc = zeros(radar.num_pulses*radar.antenna.num_elements, Nc); 
+      Vc = zeros(radar.nPulses*radar.antenna.nElements, Nc); 
       % Compute the space-time steering vector
       a = radar.antenna.spatialSteeringVector(freq_spatial);
       b = radar.temporalSteeringVector(freq_dopp);
@@ -156,11 +156,11 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all parameters that are currently in linear units to dB
     function convertTodB(obj)
       
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10*log10(obj.(obj.powerQuantities{ii}));
       end
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 20*log10(obj.(obj.voltageQuantities{ii}));
       end
       
     end
@@ -168,11 +168,11 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all parameters that are currently in dB to linear units
     function convertToLinear(obj)
       
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10^(obj.(obj.powerQuantities{ii})/10);
       end
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 10^(obj.(obj.voltageQuantities{ii})/20);
       end
       
     end
@@ -180,8 +180,8 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all angle measures to degree
     function convertToDegree(obj)
       
-      for ii = 1:numel(obj.angle_quantities)
-        obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
+      for ii = 1:numel(obj.angleQuantities)
+        obj.(obj.angleQuantities{ii}) = (180/pi)*obj.(obj.angleQuantities{ii});
       end
       
     end
@@ -189,8 +189,8 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
     % Convert all angle measures to radians
     function convertToRadian(obj)
       
-      for ii = 1:numel(obj.angle_quantities)
-        obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
+      for ii = 1:numel(obj.angleQuantities)
+        obj.(obj.angleQuantities{ii}) = (pi/180)*obj.(obj.angleQuantities{ii});
       end
       
     end
@@ -215,35 +215,35 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       
     end
     
-    function set.angle_unit(obj,val)
+    function set.angleUnit(obj,val)
       
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angle_unit,'Degrees',1)
+      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angleUnit,'Degrees',1)
         % Convert angle measures to degree
-        obj.d_angle_unit = 'Degrees';
+        obj.d_angleUnit = 'Degrees';
         obj.convertToDegree();
-      elseif strncmpi(val,'Radians',1) && ~strncmpi(obj.angle_unit,'Radians',1)
+      elseif strncmpi(val,'Radians',1) && ~strncmpi(obj.angleUnit,'Radians',1)
         % Convert angle measures to radians
-        obj.d_angle_unit = 'Radians';
+        obj.d_angleUnit = 'Radians';
         obj.convertToRadian();
       end
       
     end
     
-    function set.az_center(obj,val)
+    function set.azimuthCenter(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'})
-      obj.d_az_center = val;
-      obj.d_az_center_patch = (-(obj.span_azimuth/2-obj.span_azimuth_patch)+obj.az_center:...
-        obj.span_azimuth_patch:...
-        (obj.span_azimuth/2)+obj.az_center).';
+      obj.d_azimuthCenter = val;
+      obj.d_azimuthCenterPatch = (-(obj.azimuthSpan/2-obj.azimuthSpanPatch)+obj.azimuthCenter:...
+        obj.azimuthSpanPatch:...
+        (obj.azimuthSpan/2)+obj.azimuthCenter).';
       
     end
     
-    function set.az_center_patch(obj,val)
+    function set.azimuthCenterPatch(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'})
-      obj.d_az_center_patch = val;
+      obj.d_azimuthCenterPatch = val;
       
     end
     
@@ -253,30 +253,30 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       
     end
     
-    function set.earth_model(obj,val)
+    function set.earthModel(obj,val)
       
       validateattributes(val,{'string','char'},{});
-      obj.d_earth_model = val;
+      obj.d_earthModel = val;
       
     end
         
-    function set.span_azimuth(obj,val)
+    function set.azimuthSpan(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'})
-      obj.d_span_azimuth = val;
-      obj.d_az_center_patch = (-(obj.span_azimuth/2-obj.span_azimuth_patch)+obj.az_center:...
-        obj.span_azimuth_patch:...
-        (obj.span_azimuth/2)+obj.az_center).';
+      obj.d_azimuthSpan = val;
+      obj.d_azimuthCenterPatch = (-(obj.azimuthSpan/2-obj.azimuthSpanPatch)+obj.azimuthCenter:...
+        obj.azimuthSpanPatch:...
+        (obj.azimuthSpan/2)+obj.azimuthCenter).';
       
     end
     
-    function set.span_azimuth_patch(obj,val)
+    function set.azimuthSpanPatch(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'})
-      obj.d_span_azimuth_patch = val;
-      obj.d_az_center_patch = (-(obj.span_azimuth/2-obj.span_azimuth_patch)+obj.az_center:...
-        obj.span_azimuth_patch:...
-        (obj.span_azimuth/2)+obj.az_center).';
+      obj.d_azimuthSpanPatch = val;
+      obj.d_azimuthCenterPatch = (-(obj.azimuthSpan/2-obj.azimuthSpanPatch)+obj.azimuthCenter:...
+        obj.azimuthSpanPatch:...
+        (obj.azimuthSpan/2)+obj.azimuthCenter).';
       
     end
   end
@@ -284,8 +284,8 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
   %% Getter Methods
   methods
     
-    function out = get.angle_unit(obj)
-      out = obj.d_angle_unit;
+    function out = get.angleUnit(obj)
+      out = obj.d_angleUnit;
     end
     
     function out = get.scale(obj)
@@ -296,28 +296,28 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       out = obj.d_range;
     end
     
-    function out = get.az_center(obj)
-      out = obj.d_az_center;
+    function out = get.azimuthCenter(obj)
+      out = obj.d_azimuthCenter;
     end
     
-    function out = get.az_center_patch(obj)
-      out = obj.d_az_center_patch;
+    function out = get.azimuthCenterPatch(obj)
+      out = obj.d_azimuthCenterPatch;
     end
     
-    function out = get.num_patches(obj)
-      out = obj.d_span_azimuth/obj.d_span_azimuth_patch;
+    function out = get.nPatches(obj)
+      out = obj.d_azimuthSpan/obj.d_azimuthSpanPatch;
     end
     
-    function out = get.earth_model(obj)
-      out = obj.d_earth_model;
+    function out = get.earthModel(obj)
+      out = obj.d_earthModel;
     end
     
-    function out = get.span_azimuth(obj)
-      out = obj.d_span_azimuth;
+    function out = get.azimuthSpan(obj)
+      out = obj.d_azimuthSpan;
     end
     
-    function out = get.span_azimuth_patch(obj)
-      out = obj.d_span_azimuth_patch;
+    function out = get.azimuthSpanPatch(obj)
+      out = obj.d_azimuthSpanPatch;
     end
     
   end
@@ -331,7 +331,7 @@ classdef (Abstract) AbstractClutter < matlab.mixin.Copyable & matlab.mixin.Custo
       % Put the properties list in sorted order
       propList = sort( builtin("properties", obj) );
       % Move any control switch parameters to the top of the output
-      switches = {'scale','angle_unit'}';
+      switches = {'scale','angleUnit'}';
       propList(ismember(propList,switches)) = [];
       propList = cat(1,switches,propList);
       if nargout == 0

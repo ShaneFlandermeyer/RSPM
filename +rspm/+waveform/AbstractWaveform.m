@@ -6,7 +6,7 @@ classdef (Abstract) AbstractWaveform < matlab.mixin.Copyable & matlab.mixin.Cust
   
   %% Public properties
   properties (Access = public)
-    samp_rate; % ADC sample rate
+    sampleRate; % ADC sample rate
     % Waveform normalization (options: None, Energy, Time-Bandwidth)
     normalization = 'None';
   end

@@ -15,20 +15,20 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
   properties (Access = private)
     % List of parameters that should be updated when we change the scale
     % from linear to dB or vice versa
-    power_quantities = {'loss_system','noise_fig'};
-    voltage_quantities = {};
+    powerQuantities = {'systemLoss','noiseFig'};
+    voltageQuantities = {};
   end
   
   % Class members exposed to the outside world
   properties (Dependent)
-    power_noise;       % Noise power 
-    power_tx;          % PEAK transmit power
+    noisePower;       % Noise power 
+    txPower;          % PEAK transmit power
     scale;             % Specifies if the units are linear or in dB
-    loss_system;       % System loss factor
-    noise_fig;         % System noise figure
-    temperature_noise; % Temperature for noise calculations
+    systemLoss;       % System loss factor
+    noiseFig;         % System noise figure
+    noiseTemperature; % Temperature for noise calculations
     bandwidth;         % Receiver bandwidth (at complex baseband = the samp rate)
-    center_freq;       % Operating frequency (Hz)
+    centerFreq;       % Operating frequency (Hz)
     wavelength;        % Operating wavelength (m)
     position;          % System position
     velocity;          % System velocity (m/s)
@@ -37,24 +37,24 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
   % Internally stored class members
   properties (Access = protected)
     d_scale = 'dB';
-    d_loss_system;
-    d_noise_fig;
-    d_temperature_noise;
+    d_systemLoss;
+    d_noiseFig;
+    d_noiseTemperature;
     d_bandwidth;
-    d_center_freq;
+    d_centerFreq;
     d_wavelength;
     d_position;
     d_velocity;
-    d_power_tx;
+    d_txPower;
   end
   
   %% Setter Methods
   methods
     
-    function set.power_tx(obj,val)
+    function set.txPower(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'});
-      obj.d_power_tx = val;
+      obj.d_txPower = val;
     end
     
     function set.position(obj,val)
@@ -85,13 +85,13 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       
     end
     
-    function set.center_freq(obj,val)
+    function set.centerFreq(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_center_freq = val;
+      obj.d_centerFreq = val;
       obj.d_wavelength = obj.const.c/val;
       if isprop(obj,'antenna') && ~isempty(obj.antenna)
-        obj.antenna.center_freq = val;
+        obj.antenna.centerFreq = val;
       end
       
     end
@@ -100,24 +100,24 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_wavelength = val;
-      obj.d_center_freq = obj.const.c/val;
+      obj.d_centerFreq = obj.const.c/val;
       if (isprop(obj,'antenna')) && ~isempty(obj.antenna)
         obj.antenna.wavelength = val;
       end
       
     end
 
-    function set.noise_fig(obj,val)
+    function set.noiseFig(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'});
-      obj.d_noise_fig = val;
+      obj.d_noiseFig = val;
 
     end
 
-    function set.loss_system(obj,val)
+    function set.systemLoss(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan'});
-      obj.d_loss_system = val;
+      obj.d_systemLoss = val;
       
     end
    
@@ -141,10 +141,10 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       
     end
  
-    function set.temperature_noise(obj,val)
+    function set.noiseTemperature(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_temperature_noise = val;
+      obj.d_noiseTemperature = val;
       
     end
    
@@ -153,7 +153,7 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       obj.d_bandwidth = val;
       % Make this the sample rate for any waveform object we may be using
       if isprop(obj,'waveform') && ~isempty(obj.waveform)
-        obj.waveform.samp_rate = val;
+        obj.waveform.sampleRate = val;
       end
       
     end
@@ -162,16 +162,16 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
   %% Getter methods
   methods
     
-    function out = get.center_freq(obj)
-      out = obj.d_center_freq;
+    function out = get.centerFreq(obj)
+      out = obj.d_centerFreq;
     end
     
     function out = get.wavelength(obj)
       out = obj.d_wavelength;
     end
     
-    function out = get.power_tx(obj)
-      out = obj.d_power_tx;
+    function out = get.txPower(obj)
+      out = obj.d_txPower;
     end
     
     function out = get.position(obj)
@@ -182,11 +182,11 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       out = obj.d_velocity;
     end
     
-    function power = get.power_noise(obj)
+    function power = get.noisePower(obj)
       if (strcmpi(obj.scale,'db'))
         obj.convertToLinear();
       end
-      power = obj.const.k*obj.temperature_noise*obj.bandwidth*obj.noise_fig;
+      power = obj.const.k*obj.noiseTemperature*obj.bandwidth*obj.noiseFig;
       % Conversion to dB
       if (strcmpi(obj.scale,'db'))
         power = 10*log10(power);
@@ -196,7 +196,7 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
     
     function out = get.bandwidth(obj)
       if isprop(obj,'waveform') && isempty(obj.d_bandwidth)
-        out = obj.waveform.samp_rate;
+        out = obj.waveform.sampleRate;
       else
         out = obj.d_bandwidth;
         
@@ -207,16 +207,16 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       out = obj.d_scale;
     end
     
-    function out = get.temperature_noise(obj)
-      out = obj.d_temperature_noise;
+    function out = get.noiseTemperature(obj)
+      out = obj.d_noiseTemperature;
     end
     
-    function out = get.loss_system(obj)
-      out = obj.d_loss_system;
+    function out = get.systemLoss(obj)
+      out = obj.d_systemLoss;
     end
     
-    function out = get.noise_fig(obj)
-      out = obj.d_noise_fig;
+    function out = get.noiseFig(obj)
+      out = obj.d_noiseFig;
     end
     
   end
@@ -233,9 +233,9 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
       %          requirements for this input
       % OUTPUT: The noisy data
       if (strcmpi(obj.scale,'db'))
-        power = 10^(obj.power_noise/10);
+        power = 10^(obj.noisePower/10);
       else
-        power = obj.power_noise;
+        power = obj.noisePower;
       end
       noise = (randn(size(data)) + 1i*randn(size(data)))*sqrt(power/2);
       out = data + noise;
@@ -247,23 +247,23 @@ classdef (Abstract) AbstractRFSystem < matlab.mixin.Copyable & matlab.mixin.Cust
     
     % Convert all parameters that are currently in linear units to dB
     function convertTodB(obj)
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10*log10(obj.(obj.powerQuantities{ii}));
       end
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 20*log10(obj.(obj.voltageQuantities{ii}));
       end
     end
     
     % Convert all parameters that are currently in dB to linear units
     function convertToLinear(obj)
       
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10^(obj.(obj.powerQuantities{ii})/10);
       end
       
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 10^(obj.(obj.voltageQuantities{ii})/20);
       end
       
     end

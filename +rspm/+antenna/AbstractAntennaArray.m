@@ -5,9 +5,9 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
   % Conversion quantities
   properties (Access = protected)
     
-    power_quantities = {'gain_element','gain_tx','gain_rx'};
-    voltage_quantities = {};
-    angle_quantities = {};
+    powerQuantities = {'elementGain','txGain','rxGain'};
+    voltageQuantities = {};
+    angleQuantities = {};
   end
   
   % Constants
@@ -17,21 +17,21 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
   
   % Public properties
   properties (Dependent)
-    num_elements; % Number of array elements
-    angle_unit;
+    nElements; % Number of array elements
+    angleUnit;
     scale;
     elements;
-    center_freq;
+    centerFreq;
     wavelength;
   end
   
   % Internal data storage
   properties (Access = protected)
-    d_num_elements;
-    d_angle_unit = 'Radians';
+    d_nElements;
+    d_angleUnit = 'Radians';
     d_scale = 'dB';
     d_elements;
-    d_center_freq;
+    d_centerFreq;
     d_wavelength;
   end
   
@@ -39,10 +39,10 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
   
   methods
     
-    function set.num_elements(obj,val)
+    function set.nElements(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'})
-      obj.d_num_elements = val;
+      obj.d_nElements = val;
       
     end
     
@@ -59,12 +59,12 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
       end
 
       if numel(freq_spatial) == 1 % Scalar case
-        a = exp(1i*2*pi*freq_spatial*(0:obj.num_elements-1)');
+        a = exp(1i*2*pi*freq_spatial*(0:obj.nElements-1)');
       else % Vector case
         % Set up problem dimensions so that we can use a Hadamard product
         % instead of a loop
-        N = repmat((0:obj.num_elements-1)',1,numel(freq_spatial));
-        freq_spatial = repmat(freq_spatial,obj.num_elements,1);
+        N = repmat((0:obj.nElements-1)',1,numel(freq_spatial));
+        freq_spatial = repmat(freq_spatial,obj.nElements,1);
         a = exp(1i*2*pi*freq_spatial.*N);
       end
 
@@ -76,26 +76,26 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
   
   methods
     
-    function out = get.num_elements(obj)
+    function out = get.nElements(obj)
       
-      out = obj.d_num_elements;
+      out = obj.d_nElements;
       
     end
     
-    function set.angle_unit(obj,val)
+    function set.angleUnit(obj,val)
       
       validateattributes(val,{'string','char'},{});
-      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angle_unit,'Degrees',1)
+      if strncmpi(val,'Degrees',1) && ~strncmpi(obj.angleUnit,'Degrees',1)
         % Convert angle measures to degree
-        obj.d_angle_unit = 'Degrees';
+        obj.d_angleUnit = 'Degrees';
         obj.convertToDegree();
         % Also update the individual element objects
-        [obj.elements.angle_unit] = deal('Degrees');
-      elseif strncmpi(val,'Radians',1)&& ~strncmpi(obj.angle_unit,'Radians',1)
+        [obj.elements.angleUnit] = deal('Degrees');
+      elseif strncmpi(val,'Radians',1)&& ~strncmpi(obj.angleUnit,'Radians',1)
         % Convert angle measures to radians
-        obj.d_angle_unit = 'Radians';
+        obj.d_angleUnit = 'Radians';
         obj.convertToRadian();
-        [obj.elements.angle_unit] = deal('Radians');
+        [obj.elements.angleUnit] = deal('Radians');
       end
       
     end
@@ -127,10 +127,10 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
       
     end
     
-    function set.center_freq(obj,val)
+    function set.centerFreq(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_center_freq = val;
+      obj.d_centerFreq = val;
       obj.d_wavelength = obj.const.c/val;
       
     end
@@ -139,7 +139,7 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_wavelength = val;
-      obj.d_center_freq = obj.const.c/val;
+      obj.d_centerFreq = obj.const.c/val;
       
     end
     
@@ -148,8 +148,8 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
   %% Getter Methods
   methods
     
-    function out = get.angle_unit(obj)
-      out = obj.d_angle_unit;
+    function out = get.angleUnit(obj)
+      out = obj.d_angleUnit;
     end
     
     function out = get.scale(obj)
@@ -160,8 +160,8 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
       out = obj.d_elements;
     end
     
-    function out = get.center_freq(obj)
-      out = obj.d_center_freq;
+    function out = get.centerFreq(obj)
+      out = obj.d_centerFreq;
     end
     
     function out = get.wavelength(obj)
@@ -175,12 +175,12 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
     % Convert all parameters that are currently in linear units to dB
     function convertTodB(obj)
       
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10*log10(obj.(obj.power_quantities{ii}));
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10*log10(obj.(obj.powerQuantities{ii}));
       end
       
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 20*log10(obj.(obj.voltage_quantities{ii}));
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 20*log10(obj.(obj.voltageQuantities{ii}));
       end
       
     end
@@ -188,12 +188,12 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
     % Convert all parameters that are currently in dB to linear units
     function convertToLinear(obj)
       
-      for ii = 1:numel(obj.power_quantities)
-        obj.(obj.power_quantities{ii}) = 10^(obj.(obj.power_quantities{ii})/10);
+      for ii = 1:numel(obj.powerQuantities)
+        obj.(obj.powerQuantities{ii}) = 10^(obj.(obj.powerQuantities{ii})/10);
       end
       
-      for ii = 1:numel(obj.voltage_quantities)
-        obj.(obj.voltage_quantities{ii}) = 10^(obj.(obj.voltage_quantities{ii})/20);
+      for ii = 1:numel(obj.voltageQuantities)
+        obj.(obj.voltageQuantities{ii}) = 10^(obj.(obj.voltageQuantities{ii})/20);
       end
       
     end
@@ -201,8 +201,8 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
     % Convert all angle measures to degree
     function convertToDegree(obj)
       
-      for ii = 1:numel(obj.angle_quantities)
-        obj.(obj.angle_quantities{ii}) = (180/pi)*obj.(obj.angle_quantities{ii});
+      for ii = 1:numel(obj.angleQuantities)
+        obj.(obj.angleQuantities{ii}) = (180/pi)*obj.(obj.angleQuantities{ii});
       end
       
     end
@@ -210,8 +210,8 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
     % Convert all angle measures to radians
     function convertToRadian(obj)
       
-      for ii = 1:numel(obj.angle_quantities)
-        obj.(obj.angle_quantities{ii}) = (pi/180)*obj.(obj.angle_quantities{ii});
+      for ii = 1:numel(obj.angleQuantities)
+        obj.(obj.angleQuantities{ii}) = (pi/180)*obj.(obj.angleQuantities{ii});
       end
       
     end
@@ -226,7 +226,7 @@ classdef (Abstract) AbstractAntennaArray < matlab.mixin.Copyable & matlab.mixin.
       % Put the properties list in sorted order
       propList = sort( builtin("properties", obj) );
       % Move any control switch parameters to the top of the output
-      switches = {'angle_unit','element_pattern','scale'}';
+      switches = {'angleUnit','elementPattern','scale'}';
       propList(ismember(propList,switches)) = [];
       propList = cat(1,switches,propList);
       if nargout == 0

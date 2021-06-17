@@ -11,21 +11,21 @@ classdef Radar < rspm.system.AbstractRFSystem
   properties (Access = private)
     % List of parameters that should be updated when we change the scale
     % from linear to dB or vice versa
-    power_list = {'loss_system','noise_fig'};
+    power_list = {'systemLoss','noiseFig'};
   end
   
   % Members exposed to the outside world
   properties (Dependent)
     antenna;          % AbstractAntenna object
     waveform;         % Waveform object
-    prf;              % Pulse repetition frequency (Hz)
-    pri;              % Pulse repetition interval (s)
-    num_pulses;       % Number of pulses in a CPI
-    range_unambig;    % Unambiguous range (m)
-    velocity_unambig; % Unambiguous velocity (m/s)
-    doppler_unambig;  % Unambiguous doppler frequency (Hz)
-    range_resolution; % Range resolution (m)
-    range_horizon;    % Range to the horizon
+    PRF;              % Pulse repetition frequency (Hz)
+    PRI;              % Pulse repetition interval (s)
+    nPulses;       % Number of pulses in a CPI
+    rangeUnambig;    % Unambiguous range (m)
+    velocityUnambig; % Unambiguous velocity (m/s)
+    dopplerUnambig;  % Unambiguous doppler frequency (Hz)
+    rangeResolution; % Range resolution (m)
+    rangeHorizon;    % Range to the horizon
   end
   
   % Internal class data
@@ -34,7 +34,7 @@ classdef Radar < rspm.system.AbstractRFSystem
     d_waveform;
     d_prf;
     d_pri;
-    d_num_pulses;
+    d_nPulses;
   end
   
   %% Public Methods
@@ -57,18 +57,18 @@ classdef Radar < rspm.system.AbstractRFSystem
       jammers = copy(jammers);
       radar.scale = 'Linear';
       [clutter.scale] = deal('Linear');
-      [clutter.angle_unit] = deal('Radians');
+      [clutter.angleUnit] = deal('Radians');
       [jammers.scale] = deal('Linear');
-      [jammers.angle_unit] = deal('Radians');
+      [jammers.angleUnit] = deal('Radians');
       
-      M = radar.num_pulses; % Number of pulses
-      N = radar.antenna.num_elements; % Number of antenna elements
+      M = radar.nPulses; % Number of pulses
+      N = radar.antenna.nElements; % Number of antenna elements
       training_samps = zeros(M*N,num_snapshots);
       
       % Get the spatial steering vector for each jammer. The jammers
       % are assumed to be temporally uncorrelated, so I'm calculating
       % the temporal steering vector in the loop below
-      freq_spatial_jam = radar.antenna.spacing_element/radar.wavelength*...
+      freq_spatial_jam = radar.antenna.elementSpacing/radar.wavelength*...
         cos([jammers.elevation]).*sin([jammers.azimuth]);
       Aj = radar.antenna.spatialSteeringVector(freq_spatial_jam);
       % Get the space-time steering vector for each clutter patch
@@ -82,18 +82,18 @@ classdef Radar < rspm.system.AbstractRFSystem
       % control over the distribution
       for ii = 1 : num_snapshots
         % Clutter Contributions
-        clut = (sqrt(radar.power_noise)/2*cnr.').*...
-          (rand(1,clutter.num_patches) + 1i*randn(1,clutter.num_patches));
+        clut = (sqrt(radar.noisePower)/2*cnr.').*...
+          (rand(1,clutter.nPatches) + 1i*randn(1,clutter.nPatches));
         clut = repmat(clut,M*N,1);
         clut = sum(clut.*Vc,2);
         
         % Noise contributions
-        noise = (sqrt(radar.power_noise)/2)*(randn(M*N,1)+1i*randn(M*N,1));
+        noise = (sqrt(radar.noisePower)/2)*(randn(M*N,1)+1i*randn(M*N,1));
         
         % Jammer contributions
         for kk = 1 : length(jammers)
           % Time-dependent jammer amplitude
-          jam_temporal = (sqrt(radar.power_noise)/2*jnr(kk))*...
+          jam_temporal = (sqrt(radar.noisePower)/2*jnr(kk))*...
             (randn(M,1) + 1i*randn(M,1));
           jam = jam + kron(jam_temporal, Aj(:,kk));
         end
@@ -153,13 +153,13 @@ classdef Radar < rspm.system.AbstractRFSystem
       end
       
       if numel(freq_doppler) == 1 % Scalar case
-        b = exp(1i*2*pi*freq_doppler/obj.prf*(0:obj.num_pulses-1)');
+        b = exp(1i*2*pi*freq_doppler/obj.PRF*(0:obj.nPulses-1)');
       else % Vector case
         % Set up problem dimensions so that we can use a Hadamard product
         % instead of a loop
-        M = repmat((0:obj.num_pulses-1)',1,numel(freq_doppler));
-        freq_doppler = repmat(freq_doppler,obj.num_pulses,1);
-        b = exp(1i*2*pi*freq_doppler/obj.prf.*M);
+        M = repmat((0:obj.nPulses-1)',1,numel(freq_doppler));
+        freq_doppler = repmat(freq_doppler,obj.nPulses,1);
+        b = exp(1i*2*pi*freq_doppler/obj.PRF.*M);
       end
       
     end
@@ -170,7 +170,7 @@ classdef Radar < rspm.system.AbstractRFSystem
         error('Antenna must be an array (for now)')
       end
       
-      beta = 2*norm(obj.velocity)*obj.pri/obj.antenna.spacing_element;
+      beta = 2*norm(obj.velocity)*obj.PRI/obj.antenna.elementSpacing;
     end
     
     function rank = clutterRank(obj)
@@ -184,18 +184,18 @@ classdef Radar < rspm.system.AbstractRFSystem
         error('Antenna must be an array (for now)')
       end
       beta = obj.clutterBeta;
-      rank = round(obj.antenna.num_elements + (obj.num_pulses-1)*beta);
+      rank = round(obj.antenna.nElements + (obj.nPulses-1)*beta);
       
     end
     
     function range = measuredRange(obj,targets)
       % For each target in the list, calculate the range measured by the
-      % angle_quantities, accounting for range ambiguities;
+      % angleQuantities, accounting for range ambiguities;
       range = obj.trueRange(targets);
       for ii = 1:length(range)
         % Get the projection of the position vector onto the mainbeam pointing
         % vector
-        range(ii) = mod(range(ii),obj.range_unambig);
+        range(ii) = mod(range(ii),obj.rangeUnambig);
       end
     end
     
@@ -221,19 +221,19 @@ classdef Radar < rspm.system.AbstractRFSystem
         true_doppler = -dot(targets(ii).velocity,position_vec)*...
           2/obj.antenna.wavelength;
         
-        if (abs(true_doppler) < obj.prf/2)
+        if (abs(true_doppler) < obj.PRF/2)
           % Shift can be measured unambiguously, send it straight to the
           % output
           doppler(ii) = true_doppler;
-        elseif mod(true_doppler,obj.prf) < obj.prf/2
+        elseif mod(true_doppler,obj.PRF) < obj.PRF/2
           % Aliased doppler is within the measurable range; output it
-          aliased_doppler = mod(true_doppler,obj.prf);
+          aliased_doppler = mod(true_doppler,obj.PRF);
           doppler(ii) = aliased_doppler;
-        elseif mod(true_doppler,obj.prf) > obj.prf/2
+        elseif mod(true_doppler,obj.PRF) > obj.PRF/2
           % Aliased doppler is still ambiguous. Shift it into the measurable
           % range
-          aliased_doppler = mod(true_doppler,obj.prf);
-          doppler(ii) = aliased_doppler-obj.prf;
+          aliased_doppler = mod(true_doppler,obj.PRF);
+          doppler(ii) = aliased_doppler-obj.PRF;
         end % if
       end % for
     end
@@ -267,19 +267,19 @@ classdef Radar < rspm.system.AbstractRFSystem
       
       radar = copy(obj);
       radar.scale = 'Linear';
-      radar.antenna.angle_unit = 'Radians';
+      radar.antenna.angleUnit = 'Radians';
       
       % Get the azimuth and elevation of the targets
       pos_matrix = [targets.position]';
       [az,el] = cart2sph(pos_matrix(:,1),pos_matrix(:,2),pos_matrix(:,3));
       % Get the antenna gain in the azimuth/elevation of the targets. Also
       % convert to linear units if we're working in dB
-      G = radar.antenna.gain_element*radar.antenna.elements(1,1).normPowerGain(az,el);
+      G = radar.antenna.elementGain*radar.antenna.elements(1,1).normPowerGain(az,el);
       % Get the target ranges as seen by the radar
       ranges = radar.trueRange(targets);
       % Calculate the power from the RRE for each target
-      power = radar.power_tx*G.^2*radar.wavelength^2.*...
-        [targets(:).rcs]'./((4*pi)^3*radar.loss_system*ranges.^4);
+      power = radar.txPower*G.^2*radar.wavelength^2.*...
+        [targets(:).rcs]'./((4*pi)^3*radar.systemLoss*ranges.^4);
       
       % Convert back to dB if necessary
       if strcmpi(obj.scale,'dB')
@@ -294,10 +294,10 @@ classdef Radar < rspm.system.AbstractRFSystem
       % transmitted
       
       % Pad pulse to the PRI length
-      num_zeros = (obj.pri-obj.waveform.pulse_width)*obj.waveform.samp_rate;
+      num_zeros = (obj.PRI-obj.waveform.pulsewidth)*obj.waveform.sampleRate;
       padded_pulse = [obj.waveform.data;zeros(num_zeros,1)];
-      % Stack num_pulses padded pulses on top of each other
-      pulses = repmat(padded_pulse,obj.num_pulses,1);
+      % Stack nPulses padded pulses on top of each other
+      pulses = repmat(padded_pulse,obj.nPulses,1);
       
     end
     
@@ -316,10 +316,10 @@ classdef Radar < rspm.system.AbstractRFSystem
       % transmitted
       
       % Pad pulse to the PRI length
-      num_zeros = (obj.pri-obj.waveform.pulse_width)*obj.waveform.samp_rate;
+      num_zeros = (obj.PRI-obj.waveform.pulsewidth)*obj.waveform.sampleRate;
       padded_pulse = [obj.waveform.data;zeros(round(num_zeros),1)];
-      % Stack num_pulses padded pulses on top of each other
-      pulses = repmat(padded_pulse,1,obj.num_pulses);
+      % Stack nPulses padded pulses on top of each other
+      pulses = repmat(padded_pulse,1,obj.nPulses);
       
     end
     
@@ -345,7 +345,7 @@ classdef Radar < rspm.system.AbstractRFSystem
       % Input is a vector. Reshape to a matrix to do the calculations
       was_vector = false;
       if size(data,2) == 1
-        data = reshape(data,floor(length(data)/radar.num_pulses),radar.num_pulses);
+        data = reshape(data,floor(length(data)/radar.nPulses),radar.nPulses);
         was_vector = true;
       end
       
@@ -353,23 +353,23 @@ classdef Radar < rspm.system.AbstractRFSystem
       % Loop through all PRIs in the input data and create a scaled and
       % shifted copy for each target. The output for each PRI is the
       % superposition of these pulses
-      for ii = 1:radar.num_pulses
+      for ii = 1:radar.nPulses
         % The true range of each target (used to ensure we don't include
         % ambiguous target returns before the pulse is actually received
         true_ranges = radar.trueRange(targets);
         % The range of each target as seen from the radar
         ranges = radar.measuredRange(targets);
         % The possibly ambiguous sample delays of each target
-        delays = (2*ranges/radar.const.c)*radar.waveform.samp_rate;
+        delays = (2*ranges/radar.const.c)*radar.waveform.sampleRate;
         % The doppler shifts and amplitude for each target
-        dopp_shifts = exp(1i*2*pi*radar.measuredDoppler(targets)*radar.pri*ii);
+        dopp_shifts = exp(1i*2*pi*radar.measuredDoppler(targets)*radar.PRI*ii);
         amplitude_scaling = sqrt(radar.receivedPower(targets));
         for jj = 1:length(targets)
           % If we have not been transmitting long enough to see a target, its
           % return should not be added into the received signal until we have
           % listened long enough to see it. For example, if a target is at
           % 1.5*r_unambig, it will not be visible until the second pulse.
-          if true_ranges(jj) < radar.range_unambig*ii
+          if true_ranges(jj) < radar.rangeUnambig*ii
             % Delay the sequence
             target_return = Radar.delaySequence(data(:,ii),delays(jj));
             % Scale the sequence by the RRE and doppler shift it according to
@@ -380,7 +380,7 @@ classdef Radar < rspm.system.AbstractRFSystem
             
             % Shift the target to its position for the next PRI
             targets(jj).position = targets(jj).position + ...
-              targets(jj).velocity*radar.pri;
+              targets(jj).velocity*radar.PRI;
           end
         end
       end
@@ -409,7 +409,7 @@ classdef Radar < rspm.system.AbstractRFSystem
       
       % Input is a vector. Reshape to a matrix to do the calculations
       if size(data,2) == 1
-        data = reshape(data,floor(length(data)/obj.num_pulses),obj.num_pulses);
+        data = reshape(data,floor(length(data)/obj.nPulses),obj.nPulses);
       end
       
       mf_length = size(obj.waveform.data,1)+size(data,1)-1;
@@ -428,7 +428,7 @@ classdef Radar < rspm.system.AbstractRFSystem
       % response, where range 0 corresponds to a sample delay equal to the
       % length of the transmitted waveform
       idx = (1:size(mf_resp,1))';
-      time_axis = (idx-length(obj.waveform.data))/obj.waveform.samp_rate;
+      time_axis = (idx-length(obj.waveform.data))/obj.waveform.sampleRate;
       range_axis = time_axis*(obj.const.c/2);
       
     end
@@ -455,14 +455,14 @@ classdef Radar < rspm.system.AbstractRFSystem
       
       % Input is a vector. Reshape to a matrix to do the calculations
       if size(data,2) == 1
-        data = reshape(data,floor(length(data)/obj.num_pulses),obj.num_pulses);
+        data = reshape(data,floor(length(data)/obj.nPulses),obj.nPulses);
       end
       % Perform doppler processing over all the pulses
-      rd_map = fftshift(fft(data,obj.num_pulses*oversampling,2),2);
+      rd_map = fftshift(fft(data,obj.nPulses*oversampling,2),2);
       % Create the doppler axis for the range-doppler map
-      velocity_step = 2*obj.velocity_unambig/obj.num_pulses;
-      velocity_axis = (-obj.velocity_unambig:velocity_step:...
-        obj.velocity_unambig-velocity_step)';
+      velocity_step = 2*obj.velocityUnambig/obj.nPulses;
+      velocity_axis = (-obj.velocityUnambig:velocity_step:...
+        obj.velocityUnambig-velocity_step)';
       
     end
     
@@ -470,9 +470,9 @@ classdef Radar < rspm.system.AbstractRFSystem
       
       % Compute the SNR for each target in the input list
       if (strcmpi(obj.scale,'db'))
-        snr = obj.receivedPower(targets) - obj.power_noise;
+        snr = obj.receivedPower(targets) - obj.noisePower;
       else
-        snr = obj.receivedPower(targets) / obj.power_noise;
+        snr = obj.receivedPower(targets) / obj.noisePower;
       end
       
     end
@@ -482,14 +482,14 @@ classdef Radar < rspm.system.AbstractRFSystem
   %% Setter Methods
   methods
     
-    function set.num_pulses(obj,val)
+    function set.nPulses(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
-      obj.d_num_pulses = val;
+      obj.d_nPulses = val;
       
     end
     
-    function set.prf(obj,val)
+    function set.PRF(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_prf = val;
@@ -497,7 +497,7 @@ classdef Radar < rspm.system.AbstractRFSystem
       
     end
     
-    function set.pri(obj,val)
+    function set.PRI(obj,val)
       
       validateattributes(val,{'numeric'},{'finite','nonnan','nonnegative'});
       obj.d_pri = val;
@@ -524,24 +524,24 @@ classdef Radar < rspm.system.AbstractRFSystem
   %% Getter Methods
   methods
     
-    function out = get.range_horizon(obj)
+    function out = get.rangeHorizon(obj)
       % DEPENDS ON COORDINATE SYSTEM
       out = sqrt(2*obj.const.ae*obj.position(3) + obj.position(3)^2);
     end
     
-    function out = get.range_resolution(obj)
+    function out = get.rangeResolution(obj)
       out = obj.const.c/2/obj.bandwidth;
     end
     
-    function out = get.num_pulses(obj)
-      out = obj.d_num_pulses;
+    function out = get.nPulses(obj)
+      out = obj.d_nPulses;
     end
     
-    function out = get.prf(obj)
+    function out = get.PRF(obj)
       out = obj.d_prf;
     end
     
-    function out = get.pri(obj)
+    function out = get.PRI(obj)
       out = obj.d_pri;
     end
     
@@ -553,16 +553,16 @@ classdef Radar < rspm.system.AbstractRFSystem
       out = obj.d_antenna;
     end
     
-    function out = get.doppler_unambig(obj)
-      out = obj.prf/2;
+    function out = get.dopplerUnambig(obj)
+      out = obj.PRF/2;
     end
     
-    function out = get.range_unambig(obj)
-      out = obj.const.c*obj.pri/2;
+    function out = get.rangeUnambig(obj)
+      out = obj.const.c*obj.PRI/2;
     end
     
-    function out = get.velocity_unambig(obj)
-      out = obj.wavelength*obj.prf/4;
+    function out = get.velocityUnambig(obj)
+      out = obj.wavelength*obj.PRF/4;
     end
   end
   

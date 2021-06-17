@@ -7,7 +7,7 @@
 
 classdef LFM < rspm.waveform.AbstractPulsedWaveform
   properties
-    pulse_width; % Sweep interval (s)
+    pulsewidth; % Sweep interval (s)
     bandwidth;   % Sweep bandwidth (Hz)
   end
   
@@ -21,15 +21,15 @@ classdef LFM < rspm.waveform.AbstractPulsedWaveform
     % pulse width, then normalize accordingly
     function data = waveform(obj)
       
-      samp_interval = 1/obj.samp_rate;
-      t = (0:samp_interval:obj.pulse_width-samp_interval)';
+      samp_interval = 1/obj.sampleRate;
+      t = (0:samp_interval:obj.pulsewidth-samp_interval)';
       data = exp(1i*2*pi*...
-        (-obj.bandwidth/2*t + obj.bandwidth/2/obj.pulse_width*t.^2));
+        (-obj.bandwidth/2*t + obj.bandwidth/2/obj.pulsewidth*t.^2));
       % Normalize the data 
       if (strcmpi(obj.normalization,'Energy'))
-        data = data ./ norm(data) * obj.time_bandwidth;
+        data = data ./ norm(data) * obj.timeBandwidthProd;
       elseif (strcmpi(obj.normalization,'Time-Bandwidth'))
-        data = data ./ obj.time_bandwidth;
+        data = data ./ obj.timeBandwidthProd;
       end
       
     end
